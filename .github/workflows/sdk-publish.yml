@@ -86,7 +86,7 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@ensoul'
+          scope: '@ensoul-ai'
 
       - name: Install and build
         working-directory: typescript
@@ -145,8 +145,8 @@ jobs:
 
             **TypeScript** (GitHub npm)
             ```bash
-            echo "@ensoul:registry=https://npm.pkg.github.com" >> .npmrc
-            npm install @ensoul/sdk@${{ needs.validate.outputs.version }}
+            echo "@ensoul-ai:registry=https://npm.pkg.github.com" >> .npmrc
+            npm install @ensoul-ai/sdk@${{ needs.validate.outputs.version }}
             ```
 
             **Kotlin** (GitHub Maven)
