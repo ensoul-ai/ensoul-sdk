@@ -1,5 +1,5 @@
 {
-  "name": "@ensoul/sdk",
+  "name": "@ensoul-ai/sdk",
   "version": "0.1.0",
   "description": "Official TypeScript SDK for the Ensoul API",
   "main": "dist/index.js",
