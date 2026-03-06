@@ -123,7 +123,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [publish-python, publish-typescript, publish-kotlin]
+    needs: [validate, publish-python, publish-typescript, publish-kotlin]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -183,4 +183,11 @@ jobs:
               SOURCE_SUBDIR cpp
             )
             FetchContent_MakeAvailable(ensoul)
+            ```
+
+            **Godot** (copy addon)
+            ```bash
+            # Clone and copy the addon into your Godot project
+            git clone --depth 1 --branch ${{ github.ref_name }} https://github.com/${{ github.repository }}.git /tmp/ensoul-sdk
+            cp -r /tmp/ensoul-sdk/godot/addons/ensoul your-project/addons/ensoul
             ```
