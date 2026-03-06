@@ -1,0 +1,186 @@
+name: SDK Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  validate:
+    name: Validate version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: $VERSION"
+
+      - name: Verify Python SDK version
+        run: |
+          PYTHON_VERSION=$(grep '^version' python/pyproject.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$PYTHON_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "ERROR: Python SDK version ($PYTHON_VERSION) != tag (${{ steps.version.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Verify TypeScript SDK version
+        run: |
+          TS_VERSION=$(node -p "require('./typescript/package.json').version")
+          if [ "$TS_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "ERROR: TypeScript SDK version ($TS_VERSION) != tag (${{ steps.version.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Verify Kotlin SDK version
+        run: |
+          KOTLIN_VERSION=$(grep '^version' kotlin/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$KOTLIN_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "ERROR: Kotlin SDK version ($KOTLIN_VERSION) != tag (${{ steps.version.outputs.version }})"
+            exit 1
+          fi
+
+  publish-python:
+    name: Publish Python wheel
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build wheel
+        working-directory: python
+        run: python -m build --wheel
+
+      - name: Upload wheel to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: python/dist/*.whl
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: true
+
+  publish-typescript:
+    name: Publish TypeScript to GitHub npm
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@ensoul'
+
+      - name: Install and build
+        working-directory: typescript
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish
+        working-directory: typescript
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-kotlin:
+    name: Publish Kotlin to GitHub Maven
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish
+        working-directory: kotlin
+        run: gradle publish
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: [publish-python, publish-typescript, publish-kotlin]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update release notes
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: true
+          body: |
+            ## Ensoul SDK ${{ github.ref_name }} (Alpha)
+
+            ### Install
+
+            **Python** (from GitHub Release)
+            ```bash
+            pip install https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/ensoul-${{ needs.validate.outputs.version }}-py3-none-any.whl
+            ```
+
+            **TypeScript** (GitHub npm)
+            ```bash
+            echo "@ensoul:registry=https://npm.pkg.github.com" >> .npmrc
+            npm install @ensoul/sdk@${{ needs.validate.outputs.version }}
+            ```
+
+            **Kotlin** (GitHub Maven)
+            ```kotlin
+            repositories {
+                maven {
+                    url = uri("https://maven.pkg.github.com/${{ github.repository }}")
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR")
+                        password = System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+            dependencies {
+                implementation("ai.ensoul:ensoul-sdk:${{ needs.validate.outputs.version }}")
+            }
+            ```
+
+            **Swift** (SPM)
+            ```swift
+            .package(url: "https://github.com/${{ github.repository }}.git", from: "${{ needs.validate.outputs.version }}")
+            ```
+
+            **Unity** (UPM via git)
+            ```json
+            "ai.ensoul.sdk": "https://github.com/${{ github.repository }}.git?path=unity#${{ github.ref_name }}"
+            ```
+
+            **C++** (CMake FetchContent)
+            ```cmake
+            FetchContent_Declare(ensoul
+              GIT_REPOSITORY https://github.com/${{ github.repository }}.git
+              GIT_TAG ${{ github.ref_name }}
+              SOURCE_SUBDIR cpp
+            )
+            FetchContent_MakeAvailable(ensoul)
+            ```
