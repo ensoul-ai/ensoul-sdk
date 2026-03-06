@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+*.egg
+
+# TypeScript / Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Swift
+.build/
+.swiftpm/
+Package.resolved
+
+# Unity
+Library/
+Temp/
+obj/
+Logs/
+
+# C++
+build/
+cmake-build-*/
+*.o
+*.a
+
+# Kotlin
+.gradle/
+build/
+*.class
+
+# General
+.DS_Store
+*.swp
+*.swo

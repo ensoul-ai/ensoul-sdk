@@ -1,0 +1,96 @@
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+
+namespace Ensoul.Resources
+{
+    public class AggregateResource
+    {
+        private readonly EnsoulHttpClient _client;
+
+        public AggregateResource(EnsoulHttpClient client)
+        {
+            _client = client;
+        }
+
+        public async Task<JObject> QueryAsync(
+            string query,
+            Dictionary<string, object?> filters = null,
+            string aggregationMode = null)
+        {
+            var body = new Dictionary<string, object?> { ["query"] = query };
+            if (filters != null) body["filters"] = filters;
+            if (aggregationMode != null) body["aggregation_mode"] = aggregationMode;
+            var response = await _client.RequestAsync(HttpMethod.Post, "/v1/aggregate/query", json: body);
+            var text = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(text);
+        }
+
+        public async Task<SseStream> StreamAsync(
+            string query,
+            Dictionary<string, object?> filters = null,
+            string aggregationMode = null,
+            double targetConfidence = 0.95,
+            int minSamples = 100,
+            int? maxSamples = null)
+        {
+            var body = new Dictionary<string, object?>
+            {
+                ["query"] = query,
+                ["target_confidence"] = targetConfidence,
+                ["min_samples"] = minSamples
+            };
+            if (filters != null) body["filters"] = filters;
+            if (aggregationMode != null) body["aggregation_mode"] = aggregationMode;
+            if (maxSamples.HasValue) body["max_samples"] = maxSamples.Value;
+            return await _client.StreamSseAsync(HttpMethod.Post, "/v1/aggregate/stream", body);
+        }
+
+        public async Task<SseStream> GroupedStreamAsync(
+            string query,
+            string groupBy,
+            Dictionary<string, object?> filters = null)
+        {
+            var body = new Dictionary<string, object?> { ["query"] = query, ["group_by"] = groupBy };
+            if (filters != null) body["filters"] = filters;
+            return await _client.StreamSseAsync(HttpMethod.Post, "/v1/aggregate/stream/grouped", body);
+        }
+
+        public async Task<JObject> SimulateAsync(
+            string scenario,
+            Dictionary<string, object?> targetCohort = null,
+            int durationDays = 30,
+            Dictionary<string, object?> parameters = null)
+        {
+            var body = new Dictionary<string, object?>
+            {
+                ["scenario"] = scenario,
+                ["duration_days"] = durationDays
+            };
+            if (targetCohort != null) body["target_cohort"] = targetCohort;
+            if (parameters != null) body["parameters"] = parameters;
+            var response = await _client.RequestAsync(HttpMethod.Post, "/v1/aggregate/simulate", json: body);
+            var text = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(text);
+        }
+
+        public async Task<JObject> TraceInfluenceAsync(
+            string personaId,
+            string influenceType = null,
+            string direction = "downstream",
+            int maxDepth = 3)
+        {
+            var queryParams = new Dictionary<string, object?>
+            {
+                ["direction"] = direction,
+                ["max_depth"] = maxDepth
+            };
+            if (influenceType != null) queryParams["influence_type"] = influenceType;
+            var response = await _client.RequestAsync(
+                HttpMethod.Get, $"/v1/aggregate/influence/{personaId}", queryParams: queryParams);
+            var text = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(text);
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "com.ensoul.sdk",
+  "version": "0.1.0",
+  "displayName": "Ensoul SDK",
+  "description": "Official Unity SDK for the Ensoul API",
+  "unity": "2021.3",
+  "author": {
+    "name": "Ensoul",
+    "email": "support@ensoul.ai",
+    "url": "https://ensoul.ai"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "ensoul",
+    "ai",
+    "personas",
+    "sdk"
+  ],
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  }
+}

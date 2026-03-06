@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.0.0
+MinimumVisualStudioVersion = 10.0.0.0
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ensoul", "Runtime\Ensoul.csproj", "{6849C258-4FAF-4496-A4FF-740A5EDDC319}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ensoul.Tests", "Tests\Ensoul.Tests.csproj", "{5EE31DC6-8BB2-46A2-B156-5BF391B28FCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6849C258-4FAF-4496-A4FF-740A5EDDC319}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6849C258-4FAF-4496-A4FF-740A5EDDC319}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6849C258-4FAF-4496-A4FF-740A5EDDC319}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6849C258-4FAF-4496-A4FF-740A5EDDC319}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EE31DC6-8BB2-46A2-B156-5BF391B28FCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EE31DC6-8BB2-46A2-B156-5BF391B28FCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EE31DC6-8BB2-46A2-B156-5BF391B28FCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EE31DC6-8BB2-46A2-B156-5BF391B28FCA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
