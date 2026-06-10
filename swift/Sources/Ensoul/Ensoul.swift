@@ -27,6 +27,7 @@ public class EnsoulClient {
     public let auth: AuthResource
     public let health: Health
     public let info: Info
+    public let audit: Audit
 
     private let httpClient: HTTPClient
 
@@ -36,7 +37,7 @@ public class EnsoulClient {
     ///
     /// - Parameters:
     ///   - apiKey: API key for authentication. Falls back to `ENSOUL_API_KEY` env var.
-    ///   - baseURL: API base URL. Defaults to `"https://api.ensoul.ai"`.
+    ///   - baseURL: API base URL. Defaults to `"https://api.ensoul-ai.com"`.
     ///   - bearerToken: OAuth2 bearer token (alternative to API key).
     ///   - timeout: Request timeout in seconds. Defaults to 30.
     ///   - maxRetries: Maximum retry attempts. Defaults to 2.
@@ -52,7 +53,7 @@ public class EnsoulClient {
         session: URLSession = .shared
     ) {
         let resolvedAPIKey = apiKey ?? ProcessInfo.processInfo.environment["ENSOUL_API_KEY"]
-        let resolvedBaseURL = baseURL ?? ProcessInfo.processInfo.environment["ENSOUL_BASE_URL"] ?? "https://api.ensoul.ai"
+        let resolvedBaseURL = baseURL ?? ProcessInfo.processInfo.environment["ENSOUL_BASE_URL"] ?? "https://api.ensoul-ai.com"
 
         let config = ClientConfig(
             baseURL: resolvedBaseURL,
@@ -76,6 +77,7 @@ public class EnsoulClient {
         self.auth        = AuthResource(client: httpClient)
         self.health      = Health(client: httpClient)
         self.info        = Info(client: httpClient)
+        self.audit       = Audit(client: httpClient)
     }
 
     // MARK: - Internal init (for testing with a pre-built HTTPClient)
@@ -94,6 +96,7 @@ public class EnsoulClient {
         self.auth        = AuthResource(client: httpClient)
         self.health      = Health(client: httpClient)
         self.info        = Info(client: httpClient)
+        self.audit       = Audit(client: httpClient)
     }
 }
 

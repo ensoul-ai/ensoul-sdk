@@ -67,10 +67,6 @@ export class Simulations {
     return this.client.post(`/v1/simulations/${simulationId}/pause`, {});
   }
 
-  async stop(simulationId: string): Promise<Record<string, unknown>> {
-    return this.client.post(`/v1/simulations/${simulationId}/stop`, {});
-  }
-
   async stream(simulationId: string): Promise<SSEStream> {
     const response = await this.client.streamSSE(`/v1/simulations/${simulationId}/stream`);
     return new SSEStream(response);
@@ -103,5 +99,32 @@ export class Simulations {
 
   async getHistory(simulationId: string): Promise<Record<string, unknown>> {
     return this.client.get(`/v1/simulations/${simulationId}/history`);
+  }
+
+  /** GET /v1/simulations/{simulationId}/participants */
+  async listParticipants(
+    simulationId: string,
+    options?: { page?: number; perPage?: number },
+  ): Promise<Record<string, unknown>> {
+    const params: Record<string, unknown> = {
+      page: options?.page ?? 1,
+      per_page: options?.perPage ?? 20,
+    };
+    return this.client.get(`/v1/simulations/${simulationId}/participants`, params);
+  }
+
+  /** POST /v1/simulations/{simulationId}/participants */
+  async addParticipants(
+    simulationId: string,
+    personaIds: string[],
+  ): Promise<Record<string, unknown>> {
+    return this.client.post(`/v1/simulations/${simulationId}/participants`, {
+      persona_ids: personaIds,
+    });
+  }
+
+  /** GET /v1/simulations/{simulationId}/events/ticks */
+  async getEventTicks(simulationId: string): Promise<Record<string, unknown>> {
+    return this.client.get(`/v1/simulations/${simulationId}/events/ticks`);
   }
 }

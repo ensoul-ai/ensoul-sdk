@@ -58,8 +58,9 @@ class Domains(private val client: EnsoulHttpClient) {
         client.delete("/v1/domains/$domainId")
     }
 
-    suspend fun validate(domainId: String): JsonObject {
-        val response = client.post("/v1/domains/$domainId/validate", json = emptyMap<String, Any?>())
+    /** POST /v1/domains/validate — validate a domain config (`DomainConfigCreate`). */
+    suspend fun validate(config: Map<String, Any?>): JsonObject {
+        val response = client.post("/v1/domains/validate", json = config)
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 }

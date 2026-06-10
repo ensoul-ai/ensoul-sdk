@@ -5,13 +5,13 @@ Official TypeScript client for the Ensoul personality simulation API.
 ## Installation
 
 ```bash
-npm install @ensoul/sdk
+npm install @ensoul-ai/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { Ensoul } from "@ensoul/sdk";
+import { Ensoul } from "@ensoul-ai/sdk";
 
 const client = new Ensoul({ apiKey: process.env.ENSOUL_API_KEY });
 
@@ -60,7 +60,7 @@ for await (const persona of page.autoPagingIter()) {
 All errors extend `EnsoulError`. Import the specific subclasses you need.
 
 ```typescript
-import { Ensoul, AuthenticationError, RateLimitError, NotFoundError } from "@ensoul/sdk";
+import { Ensoul, AuthenticationError, RateLimitError, NotFoundError } from "@ensoul-ai/sdk";
 
 try {
   const persona = await client.personas.get("missing_id");
@@ -98,12 +98,12 @@ The client reads two environment variables as defaults:
 | Variable | Purpose |
 |----------|---------|
 | `ENSOUL_API_KEY` | API key (avoids passing `apiKey` in code) |
-| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul.ai`) |
+| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul-ai.com`) |
 
 **Demo API** — the current hosted demo is available at:
 
 ```bash
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 export ENSOUL_API_KEY="your-api-key"
 ```
 
@@ -112,7 +112,7 @@ With these set, `new Ensoul()` connects to the demo with no constructor options.
 You can also pass the base URL explicitly:
 
 ```typescript
-const client = new Ensoul({ apiKey: "ens_...", baseUrl: "https://demo.ensoul-ai.com/api" });
+const client = new Ensoul({ apiKey: "ens_...", baseUrl: "https://api.demo.ensoul-ai.com" });
 ```
 
 ## Authentication
@@ -131,14 +131,11 @@ const client = new Ensoul();
 const client = new Ensoul({ bearerToken: "eyJ..." });
 ```
 
-**OAuth2 client credentials**:
+**OAuth2 token exchange** (password flow, form-encoded):
 
 ```typescript
-const token = await client.auth.token({
-  grantType: "client_credentials",
-  clientId: "my_client",
-  clientSecret: process.env.CLIENT_SECRET,
-});
+const token = await client.auth.token("you@example.com", "your-password");
+const authedClient = new Ensoul({ bearerToken: token.access_token });
 ```
 
 ## Resources

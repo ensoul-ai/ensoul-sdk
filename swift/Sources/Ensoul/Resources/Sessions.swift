@@ -1,19 +1,19 @@
 /// Sessions resource for the Ensoul Swift SDK.
 ///
-/// Wraps all `/v1/personas/{personaId}/sessions` endpoints.
-///
-/// Sessions model hierarchical reasoning: a parent session can spawn child
-/// sessions that are later aggregated into a synthesised result.
+/// Hierarchical session orchestration under `/v1/sessions/*`. As of API 0.2.0
+/// these routes are no longer nested under a persona: a session is created
+/// against the authenticated team/user context, so `create` no longer takes a
+/// `personaId` (the `SessionCreate` body has no persona field). This is a
+/// distinct family from `/v1/chat/sessions` (chat-message threads). See
+/// `sdks/openapi/namespace-migration-contract.md`.
 ///
 /// Example:
 /// ```swift
 /// let session = try await client.sessions.create(
-///     personaId: "abc123",
 ///     tier: 1,
 ///     systemInstructions: "Focus on pricing strategy."
 /// )
 /// let children = try await client.sessions.getChildren(
-///     personaId: "abc123",
 ///     sessionId: session["id"] as! String
 /// )
 /// ```
@@ -31,13 +31,11 @@ public class Sessions {
 
     // MARK: - Create
 
-    /// POST /v1/personas/{personaId}/sessions
+    /// POST /v1/sessions — create a session (`SessionCreate`).
     ///
-    /// Creates a new session for the persona. Use `tier` to control reasoning
-    /// depth (0 = fast/shallow, higher = slower/deeper). Supply
-    /// `parentSessionId` to create a child session within an existing tree.
+    /// Use `tier` to control reasoning depth (0 = fast/shallow, higher =
+    /// slower/deeper). Supply `parentSessionId` to create a child session.
     public func create(
-        personaId: String,
         tier: Int = 0,
         parentSessionId: String? = nil,
         systemInstructions: String? = nil
@@ -46,57 +44,82 @@ public class Sessions {
         if let parentSessionId { body["parent_session_id"] = parentSessionId }
         if let systemInstructions { body["system_instructions"] = systemInstructions }
 
-        let (data, _) = try await client.post(
-            "/v1/personas/\(personaId)/sessions",
-            body: body
-        )
+        let (data, _) = try await client.post("/v1/sessions", body: body)
         return try Self.jsonObject(from: data)
     }
 
     // MARK: - Get
 
-    /// GET /v1/personas/{personaId}/sessions/{sessionId}
-    public func get(personaId: String, sessionId: String) async throws -> [String: Any] {
-        let (data, _) = try await client.get(
-            "/v1/personas/\(personaId)/sessions/\(sessionId)"
-        )
+    /// GET /v1/sessions/{sessionId}
+    public func get(sessionId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/sessions/\(sessionId)")
         return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Delete
+
+    /// DELETE /v1/sessions/{sessionId}
+    public func delete(sessionId: String, cancelChildren: Bool = false) async throws {
+        _ = try await client.delete(
+            "/v1/sessions/\(sessionId)?cancel_children=\(cancelChildren ? "true" : "false")"
+        )
     }
 
     // MARK: - List
 
-    /// GET /v1/personas/{personaId}/sessions
-    ///
-    /// Returns a paginated list of sessions for a persona.
+    /// GET /v1/sessions — list sessions (paginated).
     public func list(
-        personaId: String,
+        tier: Int? = nil,
+        status: String? = nil,
+        parentSessionId: String? = nil,
         page: Int = 1,
         perPage: Int = 20
     ) async throws -> RawPage {
-        let params: [String: String] = [
+        var params: [String: String] = [
             "page": String(page),
             "per_page": String(perPage),
         ]
-        let (data, _) = try await client.get(
-            "/v1/personas/\(personaId)/sessions",
-            params: params
-        )
+        if let tier { params["tier"] = String(tier) }
+        if let status { params["status"] = status }
+        if let parentSessionId { params["parent_session_id"] = parentSessionId }
+
+        let (data, _) = try await client.get("/v1/sessions", params: params)
         return try RawPage.from(data: data)
+    }
+
+    // MARK: - Hierarchy / Info / Stats
+
+    /// GET /v1/sessions/hierarchy — full session tree.
+    public func hierarchy() async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/sessions/hierarchy")
+        return try Self.jsonObject(from: data)
+    }
+
+    /// GET /v1/sessions/info — session-system info.
+    public func info() async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/sessions/info")
+        return try Self.jsonObject(from: data)
+    }
+
+    /// GET /v1/sessions/stats/summary — session statistics.
+    public func stats() async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/sessions/stats/summary")
+        return try Self.jsonObject(from: data)
     }
 
     // MARK: - Get Children
 
-    /// GET /v1/personas/{personaId}/sessions/{sessionId}/children
-    ///
-    /// Returns all direct child sessions for the given session as raw JSON
-    /// dictionaries (schema is domain-specific).
+    /// GET /v1/sessions/{sessionId}/children
     public func getChildren(
-        personaId: String,
-        sessionId: String
+        sessionId: String,
+        page: Int = 1,
+        perPage: Int = 20
     ) async throws -> [[String: Any]] {
-        let (data, _) = try await client.get(
-            "/v1/personas/\(personaId)/sessions/\(sessionId)/children"
-        )
+        let params: [String: String] = [
+            "page": String(page),
+            "per_page": String(perPage),
+        ]
+        let (data, _) = try await client.get("/v1/sessions/\(sessionId)/children", params: params)
         // The server may return a bare array or a wrapped object.
         if let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
             return array
@@ -114,21 +137,13 @@ public class Sessions {
 
     // MARK: - Aggregate Children
 
-    /// POST /v1/personas/{personaId}/sessions/{sessionId}/aggregate
-    ///
-    /// Aggregates all child sessions of the given session into a synthesised
-    /// result using the specified `aggregationMode` (e.g. `"summary"`,
-    /// `"vote"`, `"weighted"`).
+    /// POST /v1/sessions/{sessionId}/aggregate (`AggregateChildrenRequest`).
     public func aggregateChildren(
-        personaId: String,
         sessionId: String,
         aggregationMode: String = "summary"
     ) async throws -> [String: Any] {
         let body: [String: Any] = ["aggregation_mode": aggregationMode]
-        let (data, _) = try await client.post(
-            "/v1/personas/\(personaId)/sessions/\(sessionId)/aggregate",
-            body: body
-        )
+        let (data, _) = try await client.post("/v1/sessions/\(sessionId)/aggregate", body: body)
         return try Self.jsonObject(from: data)
     }
 

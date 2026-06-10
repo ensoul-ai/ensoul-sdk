@@ -8,22 +8,46 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
+/**
+ * Aggregate resource for the Ensoul SDK.
+ *
+ * As of API 0.2.0 the one-shot `POST /v1/aggregate/query` route was removed and
+ * split into `GET /v1/aggregate/count` and `GET /v1/aggregate/stats`. The
+ * forward-simulation route moved from `/v1/aggregate/simulate` to
+ * `/v1/aggregate/simulation`. See
+ * `sdks/openapi/namespace-migration-contract.md`.
+ */
 class Aggregate(private val client: EnsoulHttpClient) {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun query(
-        query: String,
-        filters: Map<String, Any?>? = null,
-        aggregationMode: String? = null,
+    /** GET /v1/aggregate/count — count personas matching a filter. */
+    suspend fun count(
+        domain: String? = null,
+        filters: String? = null,
+        region: String? = null,
+        archetype: String? = null,
+        ageMin: Int? = null,
+        ageMax: Int? = null,
     ): JsonObject {
-        val body = mutableMapOf<String, Any?>("query" to query)
-        filters?.let { body["filters"] = it }
-        aggregationMode?.let { body["aggregation_mode"] = it }
-        val response = client.post("/v1/aggregate/query", json = body)
+        val params = mutableMapOf<String, Any?>()
+        domain?.let { params["domain"] = it }
+        filters?.let { params["filters"] = it }
+        region?.let { params["region"] = it }
+        archetype?.let { params["archetype"] = it }
+        ageMin?.let { params["age_min"] = it }
+        ageMax?.let { params["age_max"] = it }
+        val response = client.get("/v1/aggregate/count", params = params)
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 
+    /** GET /v1/aggregate/stats — aggregate query statistics. */
+    suspend fun stats(): JsonObject {
+        val response = client.get("/v1/aggregate/stats")
+        return json.parseToJsonElement(response.bodyAsText()).jsonObject
+    }
+
+    /** POST /v1/aggregate/stream — returns an SSE stream of progress events. */
     suspend fun stream(
         query: String,
         filters: Map<String, Any?>? = null,
@@ -43,6 +67,7 @@ class Aggregate(private val client: EnsoulHttpClient) {
         return client.streamSse(HttpMethod.Post, "/v1/aggregate/stream", json = body)
     }
 
+    /** POST /v1/aggregate/stream/grouped */
     suspend fun groupedStream(
         query: String,
         groupBy: String,
@@ -53,6 +78,7 @@ class Aggregate(private val client: EnsoulHttpClient) {
         return client.streamSse(HttpMethod.Post, "/v1/aggregate/stream/grouped", json = body)
     }
 
+    /** POST /v1/aggregate/simulation (`SimulationRequest`). */
     suspend fun simulate(
         scenario: String,
         targetCohort: Map<String, Any?>? = null,
@@ -65,10 +91,11 @@ class Aggregate(private val client: EnsoulHttpClient) {
         )
         targetCohort?.let { body["target_cohort"] = it }
         parameters?.let { body["parameters"] = it }
-        val response = client.post("/v1/aggregate/simulate", json = body)
+        val response = client.post("/v1/aggregate/simulation", json = body)
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 
+    /** GET /v1/aggregate/influence/{personaId} */
     suspend fun traceInfluence(
         personaId: String,
         influenceType: String? = null,

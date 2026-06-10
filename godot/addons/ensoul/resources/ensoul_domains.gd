@@ -26,5 +26,7 @@ func delete(domain_id: String) -> Dictionary:
 	return await _http.delete("/domains/%s" % domain_id)
 
 
-func validate(domain_id: String) -> Dictionary:
-	return await _http.post("/domains/%s/validate" % domain_id)
+func validate(config: Dictionary) -> Dictionary:
+	## POST /v1/domains/validate — validate a domain config (DomainConfigCreate).
+	## Top-level route (no domain id in the path).
+	return await _http.post("/domains/validate", config)

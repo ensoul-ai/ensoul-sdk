@@ -55,7 +55,8 @@ export class Domains {
     await this.client.delete(`/v1/domains/${domainId}`);
   }
 
-  async validate(domainId: string): Promise<Record<string, unknown>> {
-    return this.client.post(`/v1/domains/${domainId}/validate`, {});
+  /** POST /v1/domains/validate — validate a domain config (`DomainConfigCreate`). */
+  async validate(config: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.client.post(`/v1/domains/validate`, config);
   }
 }

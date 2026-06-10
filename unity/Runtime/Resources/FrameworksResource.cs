@@ -48,11 +48,11 @@ namespace Ensoul.Resources
         public async Task DeleteAsync(string frameworkId)
             => await _client.DeleteAsync($"/v1/frameworks/{frameworkId}");
 
-        public async Task<JObject> ValidateAsync(string frameworkId)
+        /// <summary>GET /v1/frameworks/{frameworkId}/validations</summary>
+        public async Task<JObject> ValidationsAsync(string frameworkId)
         {
             var response = await _client.RequestAsync(
-                HttpMethod.Post, $"/v1/frameworks/{frameworkId}/validate",
-                json: new Dictionary<string, object?>());
+                HttpMethod.Get, $"/v1/frameworks/{frameworkId}/validations");
             var text = await response.Content.ReadAsStringAsync();
             return JObject.Parse(text);
         }

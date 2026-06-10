@@ -36,11 +36,9 @@ func start(simulation_id: String, ticks: int = -1) -> Dictionary:
 
 
 func pause(simulation_id: String) -> Dictionary:
+	## POST /v1/simulations/{simulation_id}/pause
+	## (Note: there is no /stop route — pause is the live counterpart of start.)
 	return await _http.post("/simulations/%s/pause" % simulation_id)
-
-
-func stop(simulation_id: String) -> Dictionary:
-	return await _http.post("/simulations/%s/stop" % simulation_id)
 
 
 func stream(simulation_id: String) -> EnsoulSseStream:
@@ -66,3 +64,20 @@ func get_events(simulation_id: String, page: int = 1, per_page: int = 20) -> Ens
 
 func get_history(simulation_id: String) -> Dictionary:
 	return await _http.get_req("/simulations/%s/history" % simulation_id)
+
+
+func list_participants(simulation_id: String, page: int = 1, per_page: int = 20) -> Dictionary:
+	## GET /v1/simulations/{simulation_id}/participants
+	var q := {"page": page, "per_page": per_page}
+	return await _http.get_req("/simulations/%s/participants" % simulation_id, q)
+
+
+func add_participants(simulation_id: String, persona_ids: Array) -> Dictionary:
+	## POST /v1/simulations/{simulation_id}/participants
+	var body := {"persona_ids": persona_ids}
+	return await _http.post("/simulations/%s/participants" % simulation_id, body)
+
+
+func get_event_ticks(simulation_id: String) -> Dictionary:
+	## GET /v1/simulations/{simulation_id}/events/ticks
+	return await _http.get_req("/simulations/%s/events/ticks" % simulation_id)

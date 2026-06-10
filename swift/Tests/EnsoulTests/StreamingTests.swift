@@ -16,7 +16,7 @@ import XCTest
 private func parseSSEText(_ sseText: String) async throws -> [SSEEvent] {
     let session = MockURLProtocol.makeSession()
     MockURLProtocol.requestHandler = { request in
-        let url = request.url ?? URL(string: "https://api.ensoul.ai/v1/test-stream")!
+        let url = request.url ?? URL(string: "https://api.ensoul-ai.com/v1/test-stream")!
         let response = HTTPURLResponse(
             url: url,
             statusCode: 200,
@@ -26,7 +26,7 @@ private func parseSSEText(_ sseText: String) async throws -> [SSEEvent] {
         return (response, Data(sseText.utf8))
     }
 
-    let url = URL(string: "https://api.ensoul.ai/v1/test-stream")!
+    let url = URL(string: "https://api.ensoul-ai.com/v1/test-stream")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     let stream = SSEStream(request: request, session: session)

@@ -189,8 +189,7 @@ final class ConformanceTests: XCTestCase {
         let mem = try await client.memory.create(
             personaId: "p_test_001",
             content: "Remembers meeting a friend at the park",
-            memoryType: "episodic",
-            importance: 0.7
+            source: "user"
         )
         XCTAssertEqual(mem["id"] as? String, "mem_test_001")
     }
@@ -209,7 +208,6 @@ final class ConformanceTests: XCTestCase {
     /// 23. Create a session and verify the response fields.
     func test_session_create() async throws {
         let session = try await client.sessions.create(
-            personaId: "p_test_001",
             tier: 0
         )
         XCTAssertEqual(session["id"] as? String, "sess_test_001")
@@ -220,8 +218,8 @@ final class ConformanceTests: XCTestCase {
     // MARK: - Aggregate
 
     /// 24. Run an aggregate query and verify the response fields.
-    func test_aggregate_query() async throws {
-        let result = try await client.aggregate.query("average trait_a by region")
+    func test_aggregate_count() async throws {
+        let result = try await client.aggregate.count(domain: "demo")
         XCTAssertEqual(result["sample_size"] as? Int, 500)
         XCTAssertEqual(result["confidence"] as? Double, 0.95)
     }
@@ -471,5 +469,134 @@ final class ConformanceTests: XCTestCase {
         )
         let page = try await customClient.personas.list()
         XCTAssertGreaterThanOrEqual(page.items.count, 1)
+    }
+
+    // MARK: - Chat sessions (persisted history)
+
+    func test_create_session() async throws {
+        let session = try await client.chat.createSession(
+            teamId: "team_test_001",
+            userId: "user_test_001",
+            domainId: "d_test_001",
+            personaId: "persona_test_001",
+            title: "Test Chat Session"
+        )
+        XCTAssertEqual(session["id"] as? String, "csess_test_001")
+        XCTAssertEqual(session["is_archived"] as? Bool, false)
+    }
+
+    func test_list_sessions() async throws {
+        let result = try await client.chat.listSessions(userId: "user_test_001")
+        let sessions = result["sessions"] as? [[String: Any]]
+        XCTAssertGreaterThanOrEqual(sessions?.count ?? 0, 1)
+        let pagination = result["pagination"] as? [String: Any]
+        XCTAssertEqual(pagination?["total"] as? Int, 1)
+    }
+
+    func test_session_stats() async throws {
+        let result = try await client.chat.sessionStats(
+            teamId: "team_test_001",
+            startDate: "2025-01-01",
+            endDate: "2025-01-31"
+        )
+        XCTAssertEqual(result["total"] as? Int, 7)
+    }
+
+    func test_get_session() async throws {
+        let session = try await client.chat.getSession("csess_test_001")
+        XCTAssertEqual(session["id"] as? String, "csess_test_001")
+        let messages = session["messages"] as? [[String: Any]]
+        XCTAssertGreaterThanOrEqual(messages?.count ?? 0, 1)
+    }
+
+    func test_update_session() async throws {
+        let session = try await client.chat.updateSession(
+            "csess_test_001",
+            title: "Renamed"
+        )
+        XCTAssertEqual(session["id"] as? String, "csess_test_001")
+    }
+
+    func test_archive_session() async throws {
+        let session = try await client.chat.archiveSession("csess_test_001")
+        XCTAssertEqual(session["id"] as? String, "csess_test_001")
+    }
+
+    func test_delete_session() async throws {
+        do {
+            try await client.chat.deleteSession("csess_test_001")
+        } catch {
+            XCTFail("Expected delete to succeed without throwing, got: \(error)")
+        }
+    }
+
+    func test_add_message() async throws {
+        let message = try await client.chat.addMessage(
+            "csess_test_001",
+            role: "assistant",
+            content: "Hi"
+        )
+        XCTAssertEqual(message["id"] as? String, "msg_test_002")
+        XCTAssertEqual(message["role"] as? String, "assistant")
+    }
+
+    func test_get_messages() async throws {
+        let messages = try await client.chat.getMessages("csess_test_001")
+        XCTAssertEqual(messages.count, 2)
+        XCTAssertEqual(messages[0]["role"] as? String, "user")
+    }
+
+    // MARK: - Simulation participants and event ticks
+
+    func test_list_participants() async throws {
+        let result = try await client.simulations.listParticipants("sim_test_001")
+        XCTAssertEqual(result["total"] as? Int, 2)
+        let items = result["items"] as? [[String: Any]]
+        XCTAssertEqual(items?.count, 2)
+    }
+
+    func test_add_participants() async throws {
+        let sim = try await client.simulations.addParticipants(
+            "sim_test_001",
+            personaIds: ["persona_test_001"]
+        )
+        XCTAssertEqual(sim["id"] as? String, "sim_test_001")
+    }
+
+    func test_event_ticks() async throws {
+        let result = try await client.simulations.getEventTicks("sim_test_001")
+        let ticks = result["ticks"] as? [Any]
+        XCTAssertEqual(ticks?.count, 3)
+    }
+
+    // MARK: - Audit and verification
+
+    func test_audit_get_event() async throws {
+        let event = try await client.audit.getEvent("evt_test_001")
+        XCTAssertEqual(event["event_id"] as? String, "evt_test_001")
+        XCTAssertNotNil(event["event_hash"])
+    }
+
+    func test_audit_get_commitment() async throws {
+        let commitment = try await client.audit.getCommitment("cmt_test_001")
+        XCTAssertEqual(commitment["commitment_id"] as? String, "cmt_test_001")
+        XCTAssertEqual(commitment["event_count"] as? Int, 42)
+    }
+
+    func test_audit_get_proof() async throws {
+        let proof = try await client.audit.getProof("evt_test_001")
+        XCTAssertEqual(proof["verified"] as? Bool, true)
+        let proofPath = proof["proof_path"] as? [Any]
+        XCTAssertEqual(proofPath?.count, 2)
+    }
+
+    func test_audit_verify() async throws {
+        let result = try await client.audit.verify(auditEventId: "evt_test_001")
+        XCTAssertEqual(result["verified"] as? Bool, true)
+    }
+
+    func test_audit_signing_key() async throws {
+        let pem = try await client.audit.getSigningKey()
+        XCTAssertTrue(pem.contains("BEGIN PUBLIC KEY"))
     }
 }

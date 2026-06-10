@@ -52,8 +52,9 @@ export class Frameworks {
     await this.client.delete(`/v1/frameworks/${frameworkId}`);
   }
 
-  async validate(frameworkId: string): Promise<Record<string, unknown>> {
-    return this.client.post(`/v1/frameworks/${frameworkId}/validate`, {});
+  /** GET /v1/frameworks/{frameworkId}/validations — retrieve framework validations. */
+  async validations(frameworkId: string): Promise<Record<string, unknown>> {
+    return this.client.get(`/v1/frameworks/${frameworkId}/validations`);
   }
 
   async getInstruments(frameworkId: string): Promise<unknown[]> {

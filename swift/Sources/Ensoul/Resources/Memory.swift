@@ -1,15 +1,14 @@
 /// Memory resource for the Ensoul Swift SDK.
 ///
-/// Wraps all `/v1/personas/{personaId}/memories` and
-/// `/v1/personas/{personaId}/knowledge` endpoints.
+/// Wraps the `/v1/memory/*` endpoints. As of API 0.2.0 these routes were
+/// rebased off `/v1/personas/{id}/memories` onto `/v1/memory/{personaId}`.
+/// See `sdks/openapi/namespace-migration-contract.md`.
 ///
 /// Example:
 /// ```swift
 /// let memory = try await client.memory.create(
 ///     personaId: "abc123",
-///     content: "Attended the company all-hands meeting.",
-///     memoryType: "episodic",
-///     importance: 0.7
+///     content: "Attended the company all-hands meeting."
 /// )
 /// ```
 import Foundation
@@ -24,116 +23,133 @@ public class Memory {
         self.client = client
     }
 
+    // MARK: - Stats
+
+    /// GET /v1/memory/stats — global memory statistics.
+    public func stats() async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/memory/stats")
+        return try Self.jsonObject(from: data)
+    }
+
     // MARK: - Create
 
-    /// POST /v1/personas/{personaId}/memories
-    ///
-    /// Creates a new memory for a persona. The `memoryType` controls how the
-    /// server stores and retrieves this memory (e.g. `"episodic"`, `"semantic"`).
+    /// POST /v1/memory/{personaId} — add a memory (`MemoryCreate`).
     public func create(
         personaId: String,
         content: String,
-        memoryType: String = "episodic",
-        importance: Double = 0.5,
-        metadata: [String: Any]? = nil
+        source: String = "user",
+        references: [String: Any]? = nil
     ) async throws -> [String: Any] {
         var body: [String: Any] = [
             "content": content,
-            "memory_type": memoryType,
-            "importance": importance,
+            "source": source,
         ]
-        if let metadata { body["metadata"] = metadata }
+        if let references { body["references"] = references }
 
-        let (data, _) = try await client.post(
-            "/v1/personas/\(personaId)/memories",
-            body: body
-        )
+        let (data, _) = try await client.post("/v1/memory/\(personaId)", body: body)
         return try Self.jsonObject(from: data)
     }
 
     // MARK: - List
 
-    /// GET /v1/personas/{personaId}/memories
+    /// GET /v1/memory/{personaId} — list memories.
     ///
-    /// Returns a paginated page of memories for a persona.
+    /// Returns the `MemoriesResponse` shape
+    /// `{ persona_id, memories, working_memory, total }` (not a paginated
+    /// envelope — the API does not page this route).
     public func list(
         personaId: String,
-        page: Int = 1,
-        perPage: Int = 20
-    ) async throws -> RawPage {
+        limit: Int = 50,
+        offset: Int = 0
+    ) async throws -> [String: Any] {
         let params: [String: String] = [
-            "page": String(page),
-            "per_page": String(perPage),
+            "limit": String(limit),
+            "offset": String(offset),
         ]
-        let (data, _) = try await client.get(
-            "/v1/personas/\(personaId)/memories",
-            params: params
-        )
-        return try RawPage.from(data: data)
+        let (data, _) = try await client.get("/v1/memory/\(personaId)", params: params)
+        return try Self.jsonObject(from: data)
     }
 
-    // MARK: - Get
+    // MARK: - Clear
 
-    /// GET /v1/personas/{personaId}/memories/{memoryId}
-    public func get(personaId: String, memoryId: String) async throws -> [String: Any] {
-        let (data, _) = try await client.get(
-            "/v1/personas/\(personaId)/memories/\(memoryId)"
-        )
-        return try Self.jsonObject(from: data)
+    /// DELETE /v1/memory/{personaId} — delete all memories for a persona.
+    public func clear(personaId: String) async throws {
+        _ = try await client.delete("/v1/memory/\(personaId)")
     }
 
     // MARK: - Delete
 
-    /// DELETE /v1/personas/{personaId}/memories/{memoryId}
+    /// DELETE /v1/memory/{personaId}/{memoryId} — delete one memory.
     public func delete(personaId: String, memoryId: String) async throws {
-        _ = try await client.delete("/v1/personas/\(personaId)/memories/\(memoryId)")
+        _ = try await client.delete("/v1/memory/\(personaId)/\(memoryId)")
     }
 
-    // MARK: - Batch Create
+    // MARK: - Update Access
 
-    /// POST /v1/personas/{personaId}/memories/batch
-    ///
-    /// Creates multiple memories for a persona in a single request.
-    /// Each element in `memories` should be a dict matching the single-create
-    /// body shape (keys: `content`, `memory_type`, `importance`, `metadata`).
-    public func batchCreate(
-        personaId: String,
-        memories: [[String: Any]]
-    ) async throws -> [String: Any] {
-        let body: [String: Any] = ["memories": memories]
-        let (data, _) = try await client.post(
-            "/v1/personas/\(personaId)/memories/batch",
-            body: body
-        )
-        return try Self.jsonObject(from: data)
-    }
-
-    // MARK: - Consolidate
-
-    /// POST /v1/personas/{personaId}/memories/consolidate
-    ///
-    /// Triggers server-side memory consolidation for a persona — merging
-    /// overlapping episodic memories into semantic knowledge entries.
-    public func consolidate(personaId: String) async throws -> [String: Any] {
-        let (data, _) = try await client.post(
-            "/v1/personas/\(personaId)/memories/consolidate",
+    /// PATCH /v1/memory/{personaId}/{memoryId}/access — record an access.
+    public func updateAccess(personaId: String, memoryId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.patch(
+            "/v1/memory/\(personaId)/\(memoryId)/access",
             body: [String: Any]()
         )
         return try Self.jsonObject(from: data)
     }
 
-    // MARK: - Query Knowledge
+    // MARK: - Batch Create
 
-    /// POST /v1/personas/{personaId}/knowledge/query
-    ///
-    /// Queries the persona's consolidated knowledge graph with a natural-language
-    /// query and returns the most relevant knowledge entries.
-    public func queryKnowledge(personaId: String, query: String) async throws -> [String: Any] {
-        let body: [String: Any] = ["query": query]
+    /// POST /v1/memory/{personaId}/batch — add many memories at once.
+    public func batchCreate(
+        personaId: String,
+        memories: [[String: Any]]
+    ) async throws -> [String: Any] {
+        let body: [String: Any] = ["memories": memories]
+        let (data, _) = try await client.post("/v1/memory/\(personaId)/batch", body: body)
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Consolidate
+
+    /// POST /v1/memory/{personaId}/consolidate — consolidate memories.
+    public func consolidate(personaId: String) async throws -> [String: Any] {
         let (data, _) = try await client.post(
-            "/v1/personas/\(personaId)/knowledge/query",
-            body: body
+            "/v1/memory/\(personaId)/consolidate",
+            body: [String: Any]()
         )
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Generate
+
+    /// POST /v1/memory/{personaId}/generate — generate memories.
+    public func generate(personaId: String, options: [String: Any] = [:]) async throws -> [String: Any] {
+        let (data, _) = try await client.post("/v1/memory/\(personaId)/generate", body: options)
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Working
+
+    /// GET /v1/memory/{personaId}/working — working-memory snapshot.
+    public func working(personaId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/memory/\(personaId)/working")
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Knowledge
+
+    /// GET /v1/memory/{personaId}/knowledge — retrieve RAG knowledge.
+    public func getKnowledge(personaId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/memory/\(personaId)/knowledge")
+        return try Self.jsonObject(from: data)
+    }
+
+    /// POST /v1/memory/{personaId}/knowledge — add RAG knowledge (`KnowledgeCreate`).
+    public func addKnowledge(
+        personaId: String,
+        content: String,
+        source: String
+    ) async throws -> [String: Any] {
+        let body: [String: Any] = ["content": content, "source": source]
+        let (data, _) = try await client.post("/v1/memory/\(personaId)/knowledge", body: body)
         return try Self.jsonObject(from: data)
     }
 

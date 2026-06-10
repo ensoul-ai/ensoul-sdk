@@ -4,11 +4,28 @@ extends Node
 var _http: EnsoulHttp
 
 
-func query(query_str: String, filters: Dictionary = {}, aggregation_mode: String = "") -> Dictionary:
-	var body := {"query": query_str}
-	if not filters.is_empty(): body["filters"] = filters
-	if aggregation_mode != "": body["aggregation_mode"] = aggregation_mode
-	return await _http.post("/aggregate/query", body)
+func count(
+	domain: String = "",
+	filters: String = "",
+	region: String = "",
+	archetype: String = "",
+	age_min: int = -1,
+	age_max: int = -1
+) -> Dictionary:
+	## GET /v1/aggregate/count — count personas matching a filter.
+	var q := {}
+	if domain != "": q["domain"] = domain
+	if filters != "": q["filters"] = filters
+	if region != "": q["region"] = region
+	if archetype != "": q["archetype"] = archetype
+	if age_min >= 0: q["age_min"] = age_min
+	if age_max >= 0: q["age_max"] = age_max
+	return await _http.get_req("/aggregate/count", q)
+
+
+func stats() -> Dictionary:
+	## GET /v1/aggregate/stats — aggregate query statistics.
+	return await _http.get_req("/aggregate/stats")
 
 
 func stream(
@@ -71,7 +88,7 @@ func simulate(
 	var body := {"scenario": scenario, "duration_days": duration_days}
 	if not target_cohort.is_empty(): body["target_cohort"] = target_cohort
 	if not parameters.is_empty(): body["parameters"] = parameters
-	return await _http.post("/aggregate/simulate", body)
+	return await _http.post("/aggregate/simulation", body)
 
 
 func trace_influence(

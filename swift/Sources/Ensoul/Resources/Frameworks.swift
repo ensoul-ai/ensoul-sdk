@@ -74,16 +74,15 @@ public class Frameworks {
         _ = try await client.delete("/v1/frameworks/\(frameworkId)")
     }
 
-    // MARK: - Validate
+    // MARK: - Validations
 
-    /// POST /v1/frameworks/{frameworkId}/validate
+    /// GET /v1/frameworks/{frameworkId}/validations
     ///
-    /// Triggers server-side validation of the framework configuration and
-    /// returns a validation result dict (e.g. `{ "valid": true, "errors": [] }`).
-    public func validate(_ frameworkId: String) async throws -> [String: Any] {
-        let (data, _) = try await client.post(
-            "/v1/frameworks/\(frameworkId)/validate",
-            body: [String: Any]()
+    /// Returns the framework's validation results
+    /// (e.g. `{ "valid": true, "errors": [] }`).
+    public func validations(_ frameworkId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.get(
+            "/v1/frameworks/\(frameworkId)/validations"
         )
         return try Self.jsonObject(from: data)
     }

@@ -55,6 +55,27 @@ func _run_all() -> void:
 	# --- Simulations ---
 	await _test_simulation_create()
 	await _test_simulation_start()
+	await _test_simulation_list_participants()
+	await _test_simulation_add_participants()
+	await _test_simulation_event_ticks()
+
+	# --- Chat Sessions ---
+	await _test_chat_create_session()
+	await _test_chat_list_sessions()
+	await _test_chat_session_stats()
+	await _test_chat_get_session()
+	await _test_chat_update_session()
+	await _test_chat_archive_session()
+	await _test_chat_delete_session()
+	await _test_chat_add_message()
+	await _test_chat_get_messages()
+
+	# --- Audit ---
+	await _test_audit_get_event()
+	await _test_audit_get_commitment()
+	await _test_audit_get_proof()
+	await _test_audit_verify()
+	await _test_audit_signing_key()
 
 	# --- Memory ---
 	await _test_memory_create()
@@ -64,7 +85,7 @@ func _run_all() -> void:
 	await _test_session_create()
 
 	# --- Aggregate ---
-	await _test_aggregate_query()
+	await _test_aggregate_count()
 
 	# --- Health ---
 	await _test_health_check()
@@ -304,11 +325,10 @@ func _test_simulation_start() -> void:
 
 func _test_memory_create() -> void:
 	var c := _make_client()
-	var result := await c.memory.create("p_test_001", "Remembers meeting a friend at the park", "episodic", 0.7)
+	var result := await c.memory.create("p_test_001", "Remembers meeting a friend at the park", "user")
 	if result.has("error"):
 		_fail("memory_create", result.get("error", ""))
-	elif result.body.get("id") != "mem_test_001" or result.body.get("persona_id") != "p_test_001" \
-			or result.body.get("memory_type") != "episodic":
+	elif result.body.get("id") != "mem_test_001" or result.body.get("persona_id") != "p_test_001":
 		_fail("memory_create", "unexpected body")
 	else:
 		_pass("memory_create")
@@ -331,11 +351,10 @@ func _test_memory_delete() -> void:
 
 func _test_session_create() -> void:
 	var c := _make_client()
-	var result := await c.sessions.create("p_test_001")
+	var result := await c.sessions.create(0)
 	if result.has("error"):
 		_fail("session_create", result.get("error", ""))
-	elif result.body.get("id") != "sess_test_001" or result.body.get("persona_id") != "p_test_001" \
-			or result.body.get("tier") != 0:
+	elif result.body.get("id") != "sess_test_001" or result.body.get("tier") != 0:
 		_fail("session_create", "unexpected body")
 	else:
 		_pass("session_create")
@@ -346,16 +365,15 @@ func _test_session_create() -> void:
 # Aggregate
 # =========================================================================
 
-func _test_aggregate_query() -> void:
+func _test_aggregate_count() -> void:
 	var c := _make_client()
-	var result := await c.aggregate.query("average trait_a by region")
+	var result := await c.aggregate.count("demo")
 	if result.has("error"):
-		_fail("aggregate_query", result.get("error", ""))
-	elif result.body.get("sample_size") != 500 or result.body.get("confidence") != 0.95 \
-			or result.body.get("aggregation_mode") != "mean":
-		_fail("aggregate_query", "unexpected body")
+		_fail("aggregate_count", result.get("error", ""))
+	elif result.body.get("sample_size") != 500 or result.body.get("confidence") != 0.95:
+		_fail("aggregate_count", "unexpected body")
 	else:
-		_pass("aggregate_query")
+		_pass("aggregate_count")
 	_cleanup(c)
 
 
@@ -575,4 +593,220 @@ func _test_pagination_auto_fetch() -> void:
 		_fail("pagination_auto_fetch", "expected 3 items got %d" % all.size())
 	else:
 		_pass("pagination_auto_fetch")
+	_cleanup(c)
+
+
+# =========================================================================
+# Simulation Participants
+# =========================================================================
+
+func _test_simulation_list_participants() -> void:
+	var c := _make_client()
+	var result := await c.simulations.list_participants("sim_test_001")
+	if result.has("error"):
+		_fail("simulation_list_participants", result.get("error", ""))
+	elif result.body.get("total") != 2 or result.body.get("items", []).size() != 2:
+		_fail("simulation_list_participants", "unexpected body")
+	else:
+		_pass("simulation_list_participants")
+	_cleanup(c)
+
+
+func _test_simulation_add_participants() -> void:
+	var c := _make_client()
+	var result := await c.simulations.add_participants("sim_test_001", ["persona_test_003"])
+	if result.has("error"):
+		_fail("simulation_add_participants", result.get("error", ""))
+	elif result.body.get("id") != "sim_test_001":
+		_fail("simulation_add_participants", "unexpected body")
+	else:
+		_pass("simulation_add_participants")
+	_cleanup(c)
+
+
+func _test_simulation_event_ticks() -> void:
+	var c := _make_client()
+	var result := await c.simulations.get_event_ticks("sim_test_001")
+	if result.has("error"):
+		_fail("simulation_event_ticks", result.get("error", ""))
+	elif result.body.get("ticks", []).size() != 3:
+		_fail("simulation_event_ticks", "expected 3 ticks")
+	else:
+		_pass("simulation_event_ticks")
+	_cleanup(c)
+
+
+# =========================================================================
+# Chat Sessions
+# =========================================================================
+
+func _test_chat_create_session() -> void:
+	var c := _make_client()
+	var result := await c.chat.create_session("team_test_001", "user_test_001", "d_test_001")
+	if result.has("error"):
+		_fail("chat_create_session", result.get("error", ""))
+	elif result.body.get("id") != "csess_test_001" or result.body.get("is_archived") != false:
+		_fail("chat_create_session", "unexpected body")
+	else:
+		_pass("chat_create_session")
+	_cleanup(c)
+
+
+func _test_chat_list_sessions() -> void:
+	var c := _make_client()
+	var result := await c.chat.list_sessions("user_test_001")
+	if result.has("error"):
+		_fail("chat_list_sessions", result.get("error", ""))
+	elif result.body.get("pagination", {}).get("total") != 1 or result.body.get("sessions", []).size() < 1:
+		_fail("chat_list_sessions", "unexpected body")
+	else:
+		_pass("chat_list_sessions")
+	_cleanup(c)
+
+
+func _test_chat_session_stats() -> void:
+	var c := _make_client()
+	var result := await c.chat.session_stats("team_test_001", "2025-01-01", "2025-01-31")
+	if result.has("error"):
+		_fail("chat_session_stats", result.get("error", ""))
+	elif result.body.get("total") != 7:
+		_fail("chat_session_stats", "expected total=7")
+	else:
+		_pass("chat_session_stats")
+	_cleanup(c)
+
+
+func _test_chat_get_session() -> void:
+	var c := _make_client()
+	var result := await c.chat.get_session("csess_test_001")
+	if result.has("error"):
+		_fail("chat_get_session", result.get("error", ""))
+	elif result.body.get("id") != "csess_test_001" or result.body.get("messages", []).size() < 1:
+		_fail("chat_get_session", "unexpected body")
+	else:
+		_pass("chat_get_session")
+	_cleanup(c)
+
+
+func _test_chat_update_session() -> void:
+	var c := _make_client()
+	var result := await c.chat.update_session("csess_test_001", "New Title")
+	if result.has("error"):
+		_fail("chat_update_session", result.get("error", ""))
+	elif result.body.get("id") != "csess_test_001":
+		_fail("chat_update_session", "unexpected body")
+	else:
+		_pass("chat_update_session")
+	_cleanup(c)
+
+
+func _test_chat_archive_session() -> void:
+	var c := _make_client()
+	var result := await c.chat.archive_session("csess_test_001")
+	if result.has("error"):
+		_fail("chat_archive_session", result.get("error", ""))
+	elif result.body.get("id") != "csess_test_001":
+		_fail("chat_archive_session", "unexpected body")
+	else:
+		_pass("chat_archive_session")
+	_cleanup(c)
+
+
+func _test_chat_delete_session() -> void:
+	var c := _make_client()
+	var result := await c.chat.delete_session("csess_test_001")
+	# 204 returns empty body — success if no error
+	if result.has("error"):
+		_fail("chat_delete_session", result.get("error", ""))
+	else:
+		_pass("chat_delete_session")
+	_cleanup(c)
+
+
+func _test_chat_add_message() -> void:
+	var c := _make_client()
+	var result := await c.chat.add_message("csess_test_001", "assistant", "Hello!")
+	if result.has("error"):
+		_fail("chat_add_message", result.get("error", ""))
+	elif result.body.get("id") != "msg_test_002" or result.body.get("role") != "assistant":
+		_fail("chat_add_message", "unexpected body")
+	else:
+		_pass("chat_add_message")
+	_cleanup(c)
+
+
+func _test_chat_get_messages() -> void:
+	var c := _make_client()
+	var result := await c.chat.get_messages("csess_test_001")
+	if result.has("error"):
+		_fail("chat_get_messages", result.get("error", ""))
+	elif typeof(result.body) != TYPE_ARRAY or result.body.size() != 2 \
+			or result.body[0].get("role") != "user":
+		_fail("chat_get_messages", "unexpected body")
+	else:
+		_pass("chat_get_messages")
+	_cleanup(c)
+
+
+# =========================================================================
+# Audit
+# =========================================================================
+
+func _test_audit_get_event() -> void:
+	var c := _make_client()
+	var result := await c.audit.get_event("evt_test_001")
+	if result.has("error"):
+		_fail("audit_get_event", result.get("error", ""))
+	elif result.body.get("event_id") != "evt_test_001":
+		_fail("audit_get_event", "unexpected body")
+	else:
+		_pass("audit_get_event")
+	_cleanup(c)
+
+
+func _test_audit_get_commitment() -> void:
+	var c := _make_client()
+	var result := await c.audit.get_commitment("cmt_test_001")
+	if result.has("error"):
+		_fail("audit_get_commitment", result.get("error", ""))
+	elif result.body.get("commitment_id") != "cmt_test_001" or result.body.get("event_count") != 42:
+		_fail("audit_get_commitment", "unexpected body")
+	else:
+		_pass("audit_get_commitment")
+	_cleanup(c)
+
+
+func _test_audit_get_proof() -> void:
+	var c := _make_client()
+	var result := await c.audit.get_proof("evt_test_001")
+	if result.has("error"):
+		_fail("audit_get_proof", result.get("error", ""))
+	elif result.body.get("verified") != true or result.body.get("proof_path", []).size() != 2:
+		_fail("audit_get_proof", "unexpected body")
+	else:
+		_pass("audit_get_proof")
+	_cleanup(c)
+
+
+func _test_audit_verify() -> void:
+	var c := _make_client()
+	var result := await c.audit.verify("evt_test_001")
+	if result.has("error"):
+		_fail("audit_verify", result.get("error", ""))
+	elif result.body.get("verified") != true:
+		_fail("audit_verify", "expected verified=true")
+	else:
+		_pass("audit_verify")
+	_cleanup(c)
+
+
+func _test_audit_signing_key() -> void:
+	var c := _make_client()
+	var result := await c.audit.get_signing_key()
+	if result.has("error"):
+		_fail("audit_signing_key", result.get("error", ""))
+	elif not str(result.get("text", "")).contains("BEGIN PUBLIC KEY"):
+		_fail("audit_signing_key", "PEM text missing public key header")
+	else:
+		_pass("audit_signing_key")
 	_cleanup(c)

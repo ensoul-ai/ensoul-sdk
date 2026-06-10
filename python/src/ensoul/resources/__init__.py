@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ensoul.resources.aggregate import Aggregate, AsyncAggregate
+from ensoul.resources.audit import AsyncAudit, Audit
 from ensoul.resources.auth_resource import AsyncAuthResource, AuthResource
 from ensoul.resources.chat import AsyncChat, Chat
 from ensoul.resources.domains import AsyncDomains, Domains
@@ -17,6 +18,8 @@ from ensoul.resources.simulations import AsyncSimulations, Simulations
 __all__ = [
     "Aggregate",
     "AsyncAggregate",
+    "Audit",
+    "AsyncAudit",
     "AuthResource",
     "AsyncAuthResource",
     "Chat",

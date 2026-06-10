@@ -108,19 +108,6 @@ public class Simulations {
         return try Self.jsonObject(from: data)
     }
 
-    // MARK: - Stop
-
-    /// POST /v1/simulations/{simulationId}/stop
-    ///
-    /// Permanently stops a simulation. This cannot be undone; use `pause` if you
-    /// intend to resume later.
-    public func stop(_ simulationId: String) async throws -> [String: Any] {
-        let (data, _) = try await client.post(
-            "/v1/simulations/\(simulationId)/stop",
-            body: [String: Any]()
-        )
-        return try Self.jsonObject(from: data)
-    }
 
     // MARK: - Stream
 
@@ -170,6 +157,52 @@ public class Simulations {
     /// The history schema is domain-specific.
     public func getHistory(_ simulationId: String) async throws -> [String: Any] {
         let (data, _) = try await client.get("/v1/simulations/\(simulationId)/history")
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - List Participants
+
+    /// GET /v1/simulations/{simulationId}/participants
+    ///
+    /// Returns a paginated list of participant personas as raw JSON.
+    public func listParticipants(
+        _ simulationId: String,
+        page: Int = 1,
+        perPage: Int = 20
+    ) async throws -> [String: Any] {
+        let params: [String: String] = [
+            "page": String(page),
+            "per_page": String(perPage),
+        ]
+        let (data, _) = try await client.get(
+            "/v1/simulations/\(simulationId)/participants",
+            params: params
+        )
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Add Participants
+
+    /// POST /v1/simulations/{simulationId}/participants
+    public func addParticipants(
+        _ simulationId: String,
+        personaIds: [String]
+    ) async throws -> [String: Any] {
+        let body: [String: Any] = ["persona_ids": personaIds]
+        let (data, _) = try await client.post(
+            "/v1/simulations/\(simulationId)/participants",
+            body: body
+        )
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Get Event Ticks
+
+    /// GET /v1/simulations/{simulationId}/events/ticks
+    public func getEventTicks(_ simulationId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.get(
+            "/v1/simulations/\(simulationId)/events/ticks"
+        )
         return try Self.jsonObject(from: data)
     }
 

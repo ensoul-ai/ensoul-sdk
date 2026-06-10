@@ -133,12 +133,12 @@ The client reads two environment variables as defaults:
 | Variable | Purpose |
 |----------|---------|
 | `ENSOUL_API_KEY` | API key (avoids passing it in the constructor) |
-| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul.ai`) |
+| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul-ai.com`) |
 
 **Demo API** — the current hosted demo is available at:
 
 ```bash
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 export ENSOUL_API_KEY="your-api-key"
 ```
 
@@ -147,7 +147,7 @@ With these set, `EnsoulClient client;` connects to the demo with no constructor 
 You can also pass the base URL explicitly:
 
 ```cpp
-ensoul::EnsoulClient client("ens_...", "https://demo.ensoul-ai.com/api");
+ensoul::EnsoulClient client("ens_...", "https://api.demo.ensoul-ai.com");
 ```
 
 ## Authentication
@@ -162,18 +162,17 @@ ensoul::EnsoulClient client("sk-your-api-key");
 **Bearer token**:
 
 ```cpp
-ensoul::EnsoulClient client("", "https://demo.ensoul-ai.com/api", "your-oauth-token");
+ensoul::EnsoulClient client("", "https://api.demo.ensoul-ai.com", "your-oauth-token");
 ```
 
 **OAuth2 token exchange**:
 
 ```cpp
 auto token = client.auth().token(
-    "client_credentials",
-    "your-client-id",
-    "your-client-secret"
+    "you@example.com",  // username
+    "your-password"
 );
-// token["access_token"], token["expires_in"]
+// token.access_token, token.expires_in
 ```
 
 ## Resources

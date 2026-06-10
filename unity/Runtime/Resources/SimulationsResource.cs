@@ -66,14 +66,6 @@ namespace Ensoul.Resources
             return JObject.Parse(text);
         }
 
-        public async Task<JObject> StopAsync(string simulationId)
-        {
-            var response = await _client.RequestAsync(
-                HttpMethod.Post, $"/v1/simulations/{simulationId}/stop", json: new Dictionary<string, object?>());
-            var text = await response.Content.ReadAsStringAsync();
-            return JObject.Parse(text);
-        }
-
         public async Task<SseStream> StreamAsync(string simulationId)
             => await _client.StreamSseAsync(HttpMethod.Get, $"/v1/simulations/{simulationId}/stream");
 
@@ -100,6 +92,40 @@ namespace Ensoul.Resources
         {
             var response = await _client.RequestAsync(
                 HttpMethod.Get, $"/v1/simulations/{simulationId}/history");
+            var text = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(text);
+        }
+
+        /// <summary>GET /v1/simulations/{simulationId}/participants</summary>
+        public async Task<JObject> ListParticipantsAsync(
+            string simulationId,
+            int page = 1,
+            int perPage = 20)
+        {
+            var queryParams = new Dictionary<string, object?> { ["page"] = page, ["per_page"] = perPage };
+            var response = await _client.RequestAsync(
+                HttpMethod.Get, $"/v1/simulations/{simulationId}/participants", queryParams: queryParams);
+            var text = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(text);
+        }
+
+        /// <summary>POST /v1/simulations/{simulationId}/participants</summary>
+        public async Task<JObject> AddParticipantsAsync(
+            string simulationId,
+            List<string> personaIds)
+        {
+            var body = new Dictionary<string, object?> { ["persona_ids"] = personaIds };
+            var response = await _client.RequestAsync(
+                HttpMethod.Post, $"/v1/simulations/{simulationId}/participants", json: body);
+            var text = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(text);
+        }
+
+        /// <summary>GET /v1/simulations/{simulationId}/events/ticks</summary>
+        public async Task<JObject> GetEventTicksAsync(string simulationId)
+        {
+            var response = await _client.RequestAsync(
+                HttpMethod.Get, $"/v1/simulations/{simulationId}/events/ticks");
             var text = await response.Content.ReadAsStringAsync();
             return JObject.Parse(text);
         }

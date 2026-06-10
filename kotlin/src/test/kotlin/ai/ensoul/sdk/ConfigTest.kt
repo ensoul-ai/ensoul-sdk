@@ -16,13 +16,13 @@ class ConfigTest : FunSpec({
     }
 
     test("apiUrl construction — baseUrl + /v1") {
-        val config = ClientConfig(baseUrl = "https://api.ensoul.ai")
-        config.apiUrl shouldBe "https://api.ensoul.ai/v1"
+        val config = ClientConfig(baseUrl = "https://api.ensoul-ai.com")
+        config.apiUrl shouldBe "https://api.ensoul-ai.com/v1"
     }
 
     test("apiUrl strips trailing slash") {
-        val config = ClientConfig(baseUrl = "https://api.ensoul.ai/")
-        config.apiUrl shouldBe "https://api.ensoul.ai/v1"
+        val config = ClientConfig(baseUrl = "https://api.ensoul-ai.com/")
+        config.apiUrl shouldBe "https://api.ensoul-ai.com/v1"
     }
 
     test("custom config values") {

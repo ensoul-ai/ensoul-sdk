@@ -11,7 +11,7 @@ namespace Ensoul.Tests
         public void DefaultConfig_HasCorrectDefaults()
         {
             var config = new EnsoulConfig();
-            Assert.That(config.BaseUrl, Is.EqualTo("https://api.ensoul.ai"));
+            Assert.That(config.BaseUrl, Is.EqualTo("https://api.ensoul-ai.com"));
             Assert.That(config.Timeout, Is.EqualTo(TimeSpan.FromSeconds(30)));
             Assert.That(config.MaxRetries, Is.EqualTo(2));
             Assert.That(config.ApiKey, Is.Null);
@@ -40,15 +40,15 @@ namespace Ensoul.Tests
         [Test]
         public void ApiUrl_AppendsVersion()
         {
-            var config = new EnsoulConfig(baseUrl: "https://api.ensoul.ai");
-            Assert.That(config.ApiUrl, Is.EqualTo("https://api.ensoul.ai/v1"));
+            var config = new EnsoulConfig(baseUrl: "https://api.ensoul-ai.com");
+            Assert.That(config.ApiUrl, Is.EqualTo("https://api.ensoul-ai.com/v1"));
         }
 
         [Test]
         public void ApiUrl_StripsTrailingSlash()
         {
-            var config = new EnsoulConfig(baseUrl: "https://api.ensoul.ai/");
-            Assert.That(config.ApiUrl, Is.EqualTo("https://api.ensoul.ai/v1"));
+            var config = new EnsoulConfig(baseUrl: "https://api.ensoul-ai.com/");
+            Assert.That(config.ApiUrl, Is.EqualTo("https://api.ensoul-ai.com/v1"));
         }
 
         [Test]

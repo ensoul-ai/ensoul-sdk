@@ -34,6 +34,7 @@
 #include "ensoul/resources/auth_resource.hpp"
 #include "ensoul/resources/health.hpp"
 #include "ensoul/resources/info.hpp"
+#include "ensoul/resources/audit.hpp"
 
 namespace ensoul {
 
@@ -64,6 +65,7 @@ public:
     AuthResourceNS& auth() { return *auth_; }
     HealthResource& health() { return *health_; }
     InfoResource& info() { return *info_; }
+    AuditResource& audit() { return *audit_; }
 
 private:
     EnsoulClient(const ClientConfig& config, std::unique_ptr<IHttpTransport> transport);
@@ -83,6 +85,7 @@ private:
     std::unique_ptr<AuthResourceNS> auth_;
     std::unique_ptr<HealthResource> health_;
     std::unique_ptr<InfoResource> info_;
+    std::unique_ptr<AuditResource> audit_;
 };
 
 } // namespace ensoul

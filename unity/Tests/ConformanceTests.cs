@@ -253,7 +253,7 @@ namespace Ensoul.Tests
         [Test]
         public async Task TestSessionCreate()
         {
-            var session = await _client.Sessions.CreateAsync(personaId: "p_test_001");
+            var session = await _client.Sessions.CreateAsync(tier: 0);
 
             Assert.That(session["id"]?.ToString(), Is.EqualTo("sess_test_001"));
             Assert.That(session["tier"]?.ToObject<int>(), Is.EqualTo(0));
@@ -267,7 +267,7 @@ namespace Ensoul.Tests
         [Test]
         public async Task TestAggregateQuery()
         {
-            var result = await _client.Aggregate.QueryAsync(query: "average trait_a by region");
+            var result = await _client.Aggregate.CountAsync(domain: "demo");
 
             Assert.That(result["sample_size"]?.ToObject<int>(), Is.EqualTo(500));
             Assert.That(result["confidence"]?.ToObject<double>(), Is.EqualTo(0.95));
@@ -535,6 +535,176 @@ namespace Ensoul.Tests
             var page = await customClient.Personas.ListAsync();
 
             Assert.That(page.Items.Count, Is.GreaterThanOrEqualTo(1));
+        }
+
+        // ---------------------------------------------------------------------------
+        // Chat sessions (persisted history)
+        // ---------------------------------------------------------------------------
+
+        [Test]
+        public async Task TestCreateSession()
+        {
+            var session = await _client.Chat.CreateSessionAsync(
+                teamId: "team_test_001",
+                userId: "user_test_001",
+                domainId: "d_test_001",
+                personaId: "persona_test_001",
+                title: "Test Chat Session"
+            );
+
+            Assert.That(session["id"]?.ToString(), Is.EqualTo("csess_test_001"));
+            Assert.That(session["is_archived"]?.ToObject<bool>(), Is.False);
+        }
+
+        [Test]
+        public async Task TestListSessions()
+        {
+            var result = await _client.Chat.ListSessionsAsync(userId: "user_test_001");
+
+            Assert.That(((Newtonsoft.Json.Linq.JArray)result["sessions"]).Count, Is.GreaterThanOrEqualTo(1));
+            Assert.That(result["pagination"]?["total"]?.ToObject<int>(), Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task TestSessionStats()
+        {
+            var result = await _client.Chat.SessionStatsAsync(
+                teamId: "team_test_001",
+                startDate: "2025-01-01",
+                endDate: "2025-01-31"
+            );
+
+            Assert.That(result["total"]?.ToObject<int>(), Is.EqualTo(7));
+        }
+
+        [Test]
+        public async Task TestGetSession()
+        {
+            var session = await _client.Chat.GetSessionAsync("csess_test_001");
+
+            Assert.That(session["id"]?.ToString(), Is.EqualTo("csess_test_001"));
+            Assert.That(((Newtonsoft.Json.Linq.JArray)session["messages"]).Count, Is.GreaterThanOrEqualTo(1));
+        }
+
+        [Test]
+        public async Task TestUpdateSession()
+        {
+            var session = await _client.Chat.UpdateSessionAsync("csess_test_001", title: "Renamed");
+
+            Assert.That(session["id"]?.ToString(), Is.EqualTo("csess_test_001"));
+        }
+
+        [Test]
+        public async Task TestArchiveSession()
+        {
+            var session = await _client.Chat.ArchiveSessionAsync("csess_test_001");
+
+            Assert.That(session["id"]?.ToString(), Is.EqualTo("csess_test_001"));
+        }
+
+        [Test]
+        public void TestDeleteSession()
+        {
+            // 204 No Content — completes without raising.
+            Assert.DoesNotThrowAsync(async () =>
+                await _client.Chat.DeleteSessionAsync("csess_test_001")
+            );
+        }
+
+        [Test]
+        public async Task TestAddMessage()
+        {
+            var message = await _client.Chat.AddMessageAsync(
+                "csess_test_001", role: "assistant", content: "Hi");
+
+            Assert.That(message["id"]?.ToString(), Is.EqualTo("msg_test_002"));
+            Assert.That(message["role"]?.ToString(), Is.EqualTo("assistant"));
+        }
+
+        [Test]
+        public async Task TestGetMessages()
+        {
+            var messages = await _client.Chat.GetMessagesAsync("csess_test_001");
+
+            Assert.That(messages.Count, Is.EqualTo(2));
+            Assert.That(messages[0]["role"]?.ToString(), Is.EqualTo("user"));
+        }
+
+        // ---------------------------------------------------------------------------
+        // Simulation participants and event ticks
+        // ---------------------------------------------------------------------------
+
+        [Test]
+        public async Task TestListParticipants()
+        {
+            var result = await _client.Simulations.ListParticipantsAsync("sim_test_001");
+
+            Assert.That(result["total"]?.ToObject<int>(), Is.EqualTo(2));
+            Assert.That(((Newtonsoft.Json.Linq.JArray)result["items"]).Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task TestAddParticipants()
+        {
+            var sim = await _client.Simulations.AddParticipantsAsync(
+                "sim_test_001", new List<string> { "persona_test_001" });
+
+            Assert.That(sim["id"]?.ToString(), Is.EqualTo("sim_test_001"));
+        }
+
+        [Test]
+        public async Task TestEventTicks()
+        {
+            var result = await _client.Simulations.GetEventTicksAsync("sim_test_001");
+
+            Assert.That(((Newtonsoft.Json.Linq.JArray)result["ticks"]).Count, Is.EqualTo(3));
+        }
+
+        // ---------------------------------------------------------------------------
+        // Audit and verification
+        // ---------------------------------------------------------------------------
+
+        [Test]
+        public async Task TestAuditGetEvent()
+        {
+            var ev = await _client.Audit.GetEventAsync("evt_test_001");
+
+            Assert.That(ev["event_id"]?.ToString(), Is.EqualTo("evt_test_001"));
+            Assert.That(ev["event_hash"], Is.Not.Null);
+        }
+
+        [Test]
+        public async Task TestAuditGetCommitment()
+        {
+            var commitment = await _client.Audit.GetCommitmentAsync("cmt_test_001");
+
+            Assert.That(commitment["commitment_id"]?.ToString(), Is.EqualTo("cmt_test_001"));
+            Assert.That(commitment["event_count"]?.ToObject<int>(), Is.EqualTo(42));
+        }
+
+        [Test]
+        public async Task TestAuditGetProof()
+        {
+            var proof = await _client.Audit.GetProofAsync("evt_test_001");
+
+            Assert.That(proof["verified"]?.ToObject<bool>(), Is.True);
+            Assert.That(((Newtonsoft.Json.Linq.JArray)proof["proof_path"]).Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task TestAuditVerify()
+        {
+            var result = await _client.Audit.VerifyAsync("evt_test_001");
+
+            Assert.That(result["verified"]?.ToObject<bool>(), Is.True);
+        }
+
+        [Test]
+        public async Task TestAuditSigningKey()
+        {
+            var pem = await _client.Audit.GetSigningKeyAsync();
+
+            Assert.That(pem, Does.Contain("BEGIN PUBLIC KEY"));
         }
     }
 }

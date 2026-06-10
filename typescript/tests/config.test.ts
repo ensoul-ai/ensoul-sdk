@@ -17,7 +17,7 @@ describe("buildConfig()", () => {
     it("uses the default base URL", () => {
       const config = buildConfig({});
       expect(config.baseUrl).toBe(DEFAULT_BASE_URL);
-      expect(config.baseUrl).toBe("https://api.ensoul.ai");
+      expect(config.baseUrl).toBe("https://api.ensoul-ai.com");
     });
 
     it("uses the default timeout", () => {

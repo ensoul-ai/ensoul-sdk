@@ -62,7 +62,7 @@ class Simulations:
             items=data["items"],
             total=data["total"],
             page=data["page"],
-            per_page=data["per_page"],
+            per_page=data.get("per_page", per_page),
             pages=data["pages"],
             client=self._client,
             method="GET",
@@ -87,13 +87,6 @@ class Simulations:
         """POST /v1/simulations/{simulation_id}/pause"""
         response = self._client.post(
             f"/v1/simulations/{simulation_id}/pause", json={}
-        )
-        return response.json()
-
-    def stop(self, simulation_id: str) -> dict[str, Any]:
-        """POST /v1/simulations/{simulation_id}/stop"""
-        response = self._client.post(
-            f"/v1/simulations/{simulation_id}/stop", json={}
         )
         return response.json()
 
@@ -124,7 +117,7 @@ class Simulations:
             items=data["items"],
             total=data["total"],
             page=data["page"],
-            per_page=data["per_page"],
+            per_page=data.get("per_page", per_page),
             pages=data["pages"],
             client=self._client,
             method="GET",
@@ -136,6 +129,39 @@ class Simulations:
     def get_history(self, simulation_id: str) -> dict[str, Any]:
         """GET /v1/simulations/{simulation_id}/history"""
         response = self._client.get(f"/v1/simulations/{simulation_id}/history")
+        return response.json()
+
+    def list_participants(
+        self,
+        simulation_id: str,
+        *,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> dict[str, Any]:
+        """GET /v1/simulations/{simulation_id}/participants"""
+        params: dict[str, Any] = {"page": page, "per_page": per_page}
+        response = self._client.get(
+            f"/v1/simulations/{simulation_id}/participants", params=params
+        )
+        return response.json()
+
+    def add_participants(
+        self,
+        simulation_id: str,
+        persona_ids: list[str],
+    ) -> dict[str, Any]:
+        """POST /v1/simulations/{simulation_id}/participants"""
+        body: dict[str, Any] = {"persona_ids": persona_ids}
+        response = self._client.post(
+            f"/v1/simulations/{simulation_id}/participants", json=body
+        )
+        return response.json()
+
+    def get_event_ticks(self, simulation_id: str) -> dict[str, Any]:
+        """GET /v1/simulations/{simulation_id}/events/ticks"""
+        response = self._client.get(
+            f"/v1/simulations/{simulation_id}/events/ticks"
+        )
         return response.json()
 
 
@@ -184,7 +210,7 @@ class AsyncSimulations:
             items=data["items"],
             total=data["total"],
             page=data["page"],
-            per_page=data["per_page"],
+            per_page=data.get("per_page", per_page),
             pages=data["pages"],
             client=self._client,
             method="GET",
@@ -209,13 +235,6 @@ class AsyncSimulations:
         """POST /v1/simulations/{simulation_id}/pause"""
         response = await self._client.post(
             f"/v1/simulations/{simulation_id}/pause", json={}
-        )
-        return response.json()
-
-    async def stop(self, simulation_id: str) -> dict[str, Any]:
-        """POST /v1/simulations/{simulation_id}/stop"""
-        response = await self._client.post(
-            f"/v1/simulations/{simulation_id}/stop", json={}
         )
         return response.json()
 
@@ -246,7 +265,7 @@ class AsyncSimulations:
             items=data["items"],
             total=data["total"],
             page=data["page"],
-            per_page=data["per_page"],
+            per_page=data.get("per_page", per_page),
             pages=data["pages"],
             client=self._client,
             method="GET",
@@ -258,4 +277,37 @@ class AsyncSimulations:
     async def get_history(self, simulation_id: str) -> dict[str, Any]:
         """GET /v1/simulations/{simulation_id}/history"""
         response = await self._client.get(f"/v1/simulations/{simulation_id}/history")
+        return response.json()
+
+    async def list_participants(
+        self,
+        simulation_id: str,
+        *,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> dict[str, Any]:
+        """GET /v1/simulations/{simulation_id}/participants"""
+        params: dict[str, Any] = {"page": page, "per_page": per_page}
+        response = await self._client.get(
+            f"/v1/simulations/{simulation_id}/participants", params=params
+        )
+        return response.json()
+
+    async def add_participants(
+        self,
+        simulation_id: str,
+        persona_ids: list[str],
+    ) -> dict[str, Any]:
+        """POST /v1/simulations/{simulation_id}/participants"""
+        body: dict[str, Any] = {"persona_ids": persona_ids}
+        response = await self._client.post(
+            f"/v1/simulations/{simulation_id}/participants", json=body
+        )
+        return response.json()
+
+    async def get_event_ticks(self, simulation_id: str) -> dict[str, Any]:
+        """GET /v1/simulations/{simulation_id}/events/ticks"""
+        response = await self._client.get(
+            f"/v1/simulations/{simulation_id}/events/ticks"
+        )
         return response.json()

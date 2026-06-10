@@ -121,12 +121,12 @@ The client reads two environment variables as defaults:
 | Variable | Purpose |
 |----------|---------|
 | `ENSOUL_API_KEY` | API key (avoids passing `api_key=` in code) |
-| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul.ai`) |
+| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul-ai.com`) |
 
 **Demo API** — the current hosted demo is available at:
 
 ```bash
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 export ENSOUL_API_KEY="your-api-key"
 ```
 
@@ -135,7 +135,7 @@ With these set, `Ensoul()` connects to the demo with no constructor arguments.
 You can also pass the base URL explicitly:
 
 ```python
-client = Ensoul(api_key="ens_...", base_url="https://demo.ensoul-ai.com/api")
+client = Ensoul(api_key="ens_...", base_url="https://api.demo.ensoul-ai.com")
 ```
 
 ## Authentication
@@ -154,13 +154,12 @@ client = Ensoul()
 client = Ensoul(bearer_token="eyJ...")
 ```
 
-**OAuth2 token exchange** (client credentials flow):
+**OAuth2 token exchange** (password flow, form-encoded):
 
 ```python
 token_response = client.auth.token(
-    grant_type="client_credentials",
-    client_id="your-client-id",
-    client_secret="your-client-secret",
+    username="you@example.com",
+    password="your-password",
 )
 authed_client = Ensoul(bearer_token=token_response.access_token)
 ```

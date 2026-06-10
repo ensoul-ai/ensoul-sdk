@@ -59,6 +59,7 @@ void EnsoulClient::init_resources() {
     auth_ = std::make_unique<AuthResourceNS>(*transport_);
     health_ = std::make_unique<HealthResource>(*transport_);
     info_ = std::make_unique<InfoResource>(*transport_);
+    audit_ = std::make_unique<AuditResource>(*transport_);
 }
 
 } // namespace ensoul

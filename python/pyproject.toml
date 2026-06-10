@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ensoul"
-version = "0.1.0"
+version = "0.2.0"
 description = "Official Python SDK for the Ensoul API"
 readme = "README.md"
 license = "Apache-2.0"
@@ -26,9 +26,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ensoul-ai/Ensoul"
-Repository = "https://github.com/ensoul-ai/Ensoul/tree/main/sdks/python"
-Issues = "https://github.com/ensoul-ai/Ensoul/issues"
+Homepage = "https://ensoul-ai.com"
+Documentation = "https://ensoul-ai.com/products/studio/docs"
+Repository = "https://github.com/ensoul-ai/ensoul-sdk"
+Issues = "https://github.com/ensoul-ai/ensoul-sdk/issues"
 
 [project.optional-dependencies]
 dev = [

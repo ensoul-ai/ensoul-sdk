@@ -67,7 +67,7 @@ export class HTTPClient {
       query?: Record<string, unknown>;
       skipNormalize?: boolean;
     } = {}
-  ): Promise<{ status: number; headers: Headers; json: () => Promise<Record<string, unknown>> }> {
+  ): Promise<{ status: number; headers: Headers; json: () => Promise<Record<string, unknown>>; text: () => Promise<string> }> {
     const normalizedPath = options.skipNormalize ? path : this._normalizePath(path);
     let url = this._buildUrl(normalizedPath);
 
@@ -132,6 +132,7 @@ export class HTTPClient {
           status: response.status,
           headers: response.headers,
           json: () => response.json() as Promise<Record<string, unknown>>,
+          text: () => response.text(),
         };
       } catch (err) {
         clearTimeout(timeoutId);
@@ -255,6 +256,12 @@ export class HTTPClient {
   async getRaw(path: string, query?: Record<string, unknown>): Promise<Record<string, unknown>> {
     const res = await this._request("GET", path, { query, skipNormalize: true });
     return res.json();
+  }
+
+  /** GET an unversioned path returning the raw response body as text (e.g. a PEM key). */
+  async getText(path: string, query?: Record<string, unknown>): Promise<string> {
+    const res = await this._request("GET", path, { query, skipNormalize: true });
+    return res.text();
   }
 
   async streamSSE(path: string, body?: unknown): Promise<Response> {

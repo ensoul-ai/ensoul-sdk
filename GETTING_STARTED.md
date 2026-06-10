@@ -6,15 +6,15 @@ This guide walks alpha testers through installing and verifying each SDK against
 
 - **GitHub account** with read access to `ensoul-ai/ensoul-sdk`
 - **API key** — request one from the Ensoul team
-- **Demo API** is running at `https://demo.ensoul-ai.com/api`
+- **Demo API** is running at `https://api.demo.ensoul-ai.com`
 
 ## Environment Setup
 
-All 6 SDKs read the same environment variables:
+All 7 SDKs read the same environment variables:
 
 ```bash
 export ENSOUL_API_KEY="your-api-key-here"
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 ```
 
 ## Python
@@ -25,7 +25,7 @@ export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
 
 ```bash
 # From GitHub Release (recommended for alpha)
-pip install https://github.com/ensoul-ai/ensoul-sdk/releases/download/v0.1.0/ensoul-0.1.0-py3-none-any.whl
+pip install https://github.com/ensoul-ai/ensoul-sdk/releases/download/v0.2.0/ensoul-0.2.0-py3-none-any.whl
 
 # Or from source
 pip install "git+https://github.com/ensoul-ai/ensoul-sdk.git#subdirectory=python"
@@ -49,19 +49,19 @@ print(f"API status: {health}")
 
 ```bash
 # Configure GitHub npm registry
-echo "@ensoul:registry=https://npm.pkg.github.com" >> .npmrc
+echo "@ensoul-ai:registry=https://npm.pkg.github.com" >> .npmrc
 
 # Authenticate (use a GitHub PAT with read:packages scope)
 echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> .npmrc
 
 # Install
-npm install @ensoul/sdk
+npm install @ensoul-ai/sdk
 ```
 
 ### Verify
 
 ```typescript
-import { Ensoul } from '@ensoul/sdk';
+import { Ensoul } from '@ensoul-ai/sdk';
 
 const client = new Ensoul();  // reads from env
 const health = await client.health.check();
@@ -89,7 +89,7 @@ repositories {
 }
 
 dependencies {
-    implementation("ai.ensoul:ensoul-sdk:0.1.0")
+    implementation("ai.ensoul:ensoul-sdk:0.2.0")
 }
 ```
 
@@ -115,7 +115,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ensoul-ai/ensoul-sdk.git", from: "0.1.0")
+    .package(url: "https://github.com/ensoul-ai/ensoul-sdk.git", from: "0.2.0")
 ]
 ```
 
@@ -142,7 +142,7 @@ Add to your `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "ai.ensoul.sdk": "https://github.com/ensoul-ai/ensoul-sdk.git?path=unity#v0.1.0"
+    "com.ensoul.sdk": "https://github.com/ensoul-ai/ensoul-sdk.git?path=unity#v0.2.0"
   }
 }
 ```
@@ -176,7 +176,7 @@ Then enable the plugin in **Project → Project Settings → Plugins → Ensoul*
 
 ```gdscript
 func _ready() -> void:
-    Ensoul.configure("ens_your_api_key", "https://demo.ensoul-ai.com/api")
+    Ensoul.configure("ens_your_api_key", "https://api.demo.ensoul-ai.com")
     var h := await Ensoul.health.check()
     print("API status: ", h.get("body", {}).get("status", "unknown"))
 ```
@@ -193,7 +193,7 @@ Add to your `CMakeLists.txt`:
 include(FetchContent)
 FetchContent_Declare(ensoul
   GIT_REPOSITORY https://github.com/ensoul-ai/ensoul-sdk.git
-  GIT_TAG v0.1.0
+  GIT_TAG v0.2.0
   SOURCE_SUBDIR cpp
 )
 FetchContent_MakeAvailable(ensoul)
@@ -223,8 +223,8 @@ int main() {
 
 ### Connection errors
 
-- Verify `ENSOUL_BASE_URL` is set to `https://demo.ensoul-ai.com/api`
-- Check the demo server is up: `curl https://demo.ensoul-ai.com/api/health`
+- Verify `ENSOUL_BASE_URL` is set to `https://api.demo.ensoul-ai.com`
+- Check the demo server is up: `curl https://api.demo.ensoul-ai.com/health`
 
 ### GitHub npm 401 (TypeScript)
 
@@ -243,7 +243,7 @@ int main() {
 
 ### Unity package not found
 
-- Ensure the git URL includes `?path=unity` and the tag `#v0.1.0`
+- Ensure the git URL includes `?path=unity` and the tag `#v0.2.0`
 - Unity's package manager needs git installed and accessible
 
 ### C++ build errors

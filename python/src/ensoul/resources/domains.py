@@ -32,7 +32,7 @@ class Domains:
             items=data["items"],
             total=data["total"],
             page=data["page"],
-            per_page=data["per_page"],
+            per_page=data.get("per_page", per_page),
             pages=data["pages"],
             client=self._client,
             method="GET",
@@ -62,9 +62,9 @@ class Domains:
         """DELETE /v1/domains/{domain_id}"""
         self._client.delete(f"/v1/domains/{domain_id}")
 
-    def validate(self, domain_id: str) -> dict[str, Any]:
-        """POST /v1/domains/{domain_id}/validate"""
-        response = self._client.post(f"/v1/domains/{domain_id}/validate", json={})
+    def validate(self, config: dict[str, Any]) -> dict[str, Any]:
+        """POST /v1/domains/validate — validate a domain config (``DomainConfigCreate``)."""
+        response = self._client.post("/v1/domains/validate", json=config)
         return response.json()
 
 
@@ -88,7 +88,7 @@ class AsyncDomains:
             items=data["items"],
             total=data["total"],
             page=data["page"],
-            per_page=data["per_page"],
+            per_page=data.get("per_page", per_page),
             pages=data["pages"],
             client=self._client,
             method="GET",
@@ -118,9 +118,7 @@ class AsyncDomains:
         """DELETE /v1/domains/{domain_id}"""
         await self._client.delete(f"/v1/domains/{domain_id}")
 
-    async def validate(self, domain_id: str) -> dict[str, Any]:
-        """POST /v1/domains/{domain_id}/validate"""
-        response = await self._client.post(
-            f"/v1/domains/{domain_id}/validate", json={}
-        )
+    async def validate(self, config: dict[str, Any]) -> dict[str, Any]:
+        """POST /v1/domains/validate — validate a domain config (``DomainConfigCreate``)."""
+        response = await self._client.post("/v1/domains/validate", json=config)
         return response.json()

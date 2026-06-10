@@ -2,7 +2,7 @@
  * Client configuration for the Ensoul TypeScript SDK.
  */
 
-export const DEFAULT_BASE_URL = "https://api.ensoul.ai";
+export const DEFAULT_BASE_URL = "https://api.ensoul-ai.com";
 export const DEFAULT_TIMEOUT = 30_000; // milliseconds
 export const DEFAULT_MAX_RETRIES = 2;
 export const API_VERSION = "v1";

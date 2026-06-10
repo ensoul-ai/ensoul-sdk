@@ -13,6 +13,7 @@ from ensoul.config import (
 )
 from ensoul.http import AsyncHTTPClient, SyncHTTPClient
 from ensoul.resources.aggregate import Aggregate, AsyncAggregate
+from ensoul.resources.audit import AsyncAudit, Audit
 from ensoul.resources.auth_resource import AsyncAuthResource, AuthResource
 from ensoul.resources.chat import AsyncChat, Chat
 from ensoul.resources.domains import AsyncDomains, Domains
@@ -54,6 +55,7 @@ class Ensoul:
     domains: Domains
     simulations: Simulations
     aggregate: Aggregate
+    audit: Audit
     memory: Memory
     sessions: Sessions
     frameworks: Frameworks
@@ -91,6 +93,7 @@ class Ensoul:
         self.domains = Domains(self._client)
         self.simulations = Simulations(self._client)
         self.aggregate = Aggregate(self._client)
+        self.audit = Audit(self._client)
         self.memory = Memory(self._client)
         self.sessions = Sessions(self._client)
         self.frameworks = Frameworks(self._client)
@@ -127,6 +130,7 @@ class AsyncEnsoul:
     domains: AsyncDomains
     simulations: AsyncSimulations
     aggregate: AsyncAggregate
+    audit: AsyncAudit
     memory: AsyncMemory
     sessions: AsyncSessions
     frameworks: AsyncFrameworks
@@ -164,6 +168,7 @@ class AsyncEnsoul:
         self.domains = AsyncDomains(self._client)
         self.simulations = AsyncSimulations(self._client)
         self.aggregate = AsyncAggregate(self._client)
+        self.audit = AsyncAudit(self._client)
         self.memory = AsyncMemory(self._client)
         self.sessions = AsyncSessions(self._client)
         self.frameworks = AsyncFrameworks(self._client)

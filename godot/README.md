@@ -94,7 +94,7 @@ Ensoul.configure("ens_your_api_key", "https://your-instance.example.com/api")
 # Full options
 Ensoul.configure(
     "ens_your_api_key",              # api_key
-    "https://demo.ensoul-ai.com/api", # base_url
+    "https://api.ensoul-ai.com",      # base_url
     "",                               # bearer_token
     30.0,                             # timeout seconds
     3                                 # max retries
@@ -113,7 +113,7 @@ If no explicit values are passed, the SDK reads from environment variables:
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `ENSOUL_API_KEY` | API key | (none) |
-| `ENSOUL_BASE_URL` | Base URL | `https://demo.ensoul-ai.com/api` |
+| `ENSOUL_BASE_URL` | Base URL | `https://api.ensoul-ai.com` |
 
 ## Resource Namespaces
 

@@ -21,9 +21,9 @@ final class PersonasTests: XCTestCase {
 
     private func makePersonaURL(id: String? = nil) -> URL {
         if let id {
-            return URL(string: "https://api.ensoul.ai/v1/personas/\(id)")!
+            return URL(string: "https://api.ensoul-ai.com/v1/personas/\(id)")!
         }
-        return URL(string: "https://api.ensoul.ai/v1/personas")!
+        return URL(string: "https://api.ensoul-ai.com/v1/personas")!
     }
 
     // MARK: - Create persona
@@ -32,7 +32,7 @@ final class PersonasTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 201)
             let data = PersonaFixtures.data(PersonaFixtures.alexRivera)
             return (response, data)
@@ -48,7 +48,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_create_decodesPersonaResponse() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 201)
             return (response, PersonaFixtures.data(PersonaFixtures.alexRivera))
         }
@@ -67,7 +67,7 @@ final class PersonasTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 201)
             return (response, PersonaFixtures.data(PersonaFixtures.alexRivera))
         }
@@ -84,7 +84,7 @@ final class PersonasTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.alexRivera))
         }
@@ -102,7 +102,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_get_decodesPersonaResponse() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.alexRivera))
         }
@@ -119,7 +119,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_get_404_throwsNotFoundError() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/bad_id")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/bad_id")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 404)
             return (response, ErrorFixtures.data(ErrorFixtures.personaNotFound))
         }
@@ -141,7 +141,7 @@ final class PersonasTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.listEnvelope()))
         }
@@ -154,7 +154,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_list_decodesPageWithItems() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.listEnvelope()))
         }
@@ -171,7 +171,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_list_firstItemMatchesFixture() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.listEnvelope()))
         }
@@ -185,7 +185,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_list_hasNextPage_returnsFalseOnSinglePage() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.listEnvelope(page: 1, pages: 1)))
         }
@@ -198,7 +198,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_list_hasNextPage_returnsTrueWhenMorePages() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.listEnvelope(page: 1, pages: 3)))
         }
@@ -215,7 +215,7 @@ final class PersonasTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 204)
             return (response, Data())
         }
@@ -230,7 +230,7 @@ final class PersonasTests: XCTestCase {
 
     func test_personas_delete_doesNotThrow_on204() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 204)
             return (response, Data())
         }

@@ -19,6 +19,7 @@ class EnsoulClient private constructor(
     val auth: AuthResource = AuthResource(httpClient)
     val health: Health = Health(httpClient)
     val info: Info = Info(httpClient)
+    val audit: Audit = Audit(httpClient)
 
     override fun close() {
         httpClient.close()

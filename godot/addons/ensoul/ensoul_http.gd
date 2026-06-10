@@ -38,6 +38,12 @@ func put(path: String, body: Dictionary = {}) -> Dictionary:
 	return await _request(_build_url(path), HTTPClient.METHOD_PUT, headers, JSON.stringify(body))
 
 
+func patch(path: String, body: Dictionary = {}) -> Dictionary:
+	var headers := _build_headers()
+	headers.append("Content-Type: application/json")
+	return await _request(_build_url(path), HTTPClient.METHOD_PATCH, headers, JSON.stringify(body))
+
+
 func delete(path: String) -> Dictionary:
 	return await _request(_build_url(path), HTTPClient.METHOD_DELETE, _build_headers())
 
@@ -55,6 +61,13 @@ func post_form(path: String, form_data: Dictionary) -> Dictionary:
 func get_raw(path: String) -> Dictionary:
 	var url := _config.base_url.trim_suffix("/") + path
 	return await _request(url, HTTPClient.METHOD_GET, _build_headers())
+
+
+# Fetch a non-versioned path returning the raw response body as text
+# (e.g. the PEM signing key at /.well-known/...). Returns {status_code, text}.
+func get_text(path: String) -> Dictionary:
+	var url := _config.base_url.trim_suffix("/") + path
+	return await _request(url, HTTPClient.METHOD_GET, _build_headers(), "", true)
 
 
 func _build_headers() -> Array[String]:
@@ -81,7 +94,7 @@ func _build_url(path: String, query: Dictionary = {}) -> String:
 	return url + "?" + "&".join(parts)
 
 
-func _request(url: String, method: int, headers: Array[String], body: String = "") -> Dictionary:
+func _request(url: String, method: int, headers: Array[String], body: String = "", raw_text: bool = false) -> Dictionary:
 	var last_error := ""
 	# max_retries=0 means 1 attempt (no retries), matching Python/TS/Unity SDKs
 	for attempt in _config.max_retries + 1:
@@ -118,6 +131,9 @@ func _request(url: String, method: int, headers: Array[String], body: String = "
 				await get_tree().create_timer(_config.retry_base_sec * pow(2.0, attempt)).timeout
 				continue
 			return {"error": last_error, "status_code": http_code}
+
+		if raw_text:
+			return {"status_code": http_code, "text": text}
 
 		if text.is_empty():
 			return {"status_code": http_code, "body": {}}

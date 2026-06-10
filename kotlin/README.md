@@ -48,8 +48,8 @@ Chat responses and aggregate queries support server-sent event streaming via
 ```kotlin
 EnsoulClient().use { client ->
     val stream = client.chat.stream(personaId = "persona-id", message = "Tell me a story.")
-    stream.events.collect { event ->
-        print(event.chunk)
+    stream.events().collect { event ->
+        print(event.data)
     }
 }
 ```
@@ -58,7 +58,7 @@ Aggregate streaming works the same way:
 
 ```kotlin
 val stream = client.aggregate.stream("What do people value most?")
-stream.events.collect { event -> println(event.data) }
+stream.events().collect { event -> println(event.data) }
 ```
 
 ## Pagination
@@ -125,12 +125,12 @@ The client reads two environment variables as defaults:
 | Variable | Purpose |
 |----------|---------|
 | `ENSOUL_API_KEY` | API key (avoids passing `apiKey` in code) |
-| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul.ai`) |
+| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul-ai.com`) |
 
 **Demo API** — the current hosted demo is available at:
 
 ```bash
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 export ENSOUL_API_KEY="your-api-key"
 ```
 
@@ -139,7 +139,7 @@ With these set, `EnsoulClient()` connects to the demo with no constructor argume
 You can also pass the base URL explicitly:
 
 ```kotlin
-val client = EnsoulClient(apiKey = "ens_...", baseUrl = "https://demo.ensoul-ai.com/api")
+val client = EnsoulClient(apiKey = "ens_...", baseUrl = "https://api.demo.ensoul-ai.com")
 ```
 
 ## Authentication
@@ -162,9 +162,8 @@ val client = EnsoulClient(bearerToken = "eyJ...")
 
 ```kotlin
 val token = client.auth.token(
-    grantType = "client_credentials",
-    clientId = "your-client-id",
-    clientSecret = "your-client-secret"
+    username = "you@example.com",
+    password = "your-password"
 )
 val authedClient = EnsoulClient(bearerToken = token.accessToken)
 ```

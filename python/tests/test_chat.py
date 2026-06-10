@@ -27,7 +27,7 @@ CHAT_RESPONSE_PAYLOAD = {
         "total_tokens": 298,
     },
     "latency_ms": 1200,
-    "model": "claude-3-5-sonnet",
+    "model": "claude-sonnet-4-6",
     "timestamp": "2025-01-15T10:30:00Z",
 }
 

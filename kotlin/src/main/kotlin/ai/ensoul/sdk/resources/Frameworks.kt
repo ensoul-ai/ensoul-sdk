@@ -54,8 +54,9 @@ class Frameworks(private val client: EnsoulHttpClient) {
         client.delete("/v1/frameworks/$frameworkId")
     }
 
-    suspend fun validate(frameworkId: String): JsonObject {
-        val response = client.post("/v1/frameworks/$frameworkId/validate", json = emptyMap<String, Any?>())
+    /** GET /v1/frameworks/{frameworkId}/validations */
+    suspend fun validations(frameworkId: String): JsonObject {
+        val response = client.get("/v1/frameworks/$frameworkId/validations")
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 

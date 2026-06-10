@@ -110,12 +110,12 @@ The client reads two environment variables as defaults:
 | Variable | Purpose |
 |----------|---------|
 | `ENSOUL_API_KEY` | API key (avoids passing `apiKey:` in code) |
-| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul.ai`) |
+| `ENSOUL_BASE_URL` | API base URL (default: `https://api.ensoul-ai.com`) |
 
 **Demo API** — the current hosted demo is available at:
 
 ```bash
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 export ENSOUL_API_KEY="your-api-key"
 ```
 
@@ -126,7 +126,7 @@ You can also pass the base URL explicitly:
 ```csharp
 using var client = new EnsoulClient(new EnsoulConfig(
     apiKey: "ens_...",
-    baseUrl: "https://demo.ensoul-ai.com/api"
+    baseUrl: "https://api.demo.ensoul-ai.com"
 ));
 ```
 
@@ -146,13 +146,12 @@ using var client = new EnsoulClient(new EnsoulConfig());
 using var client = new EnsoulClient(new EnsoulConfig(bearerToken: "eyJ..."));
 ```
 
-**OAuth2 client credentials**:
+**OAuth2 token exchange** (password flow, form-encoded):
 
 ```csharp
 var token = await client.Auth.TokenAsync(
-    grantType: "client_credentials",
-    clientId: "your-client-id",
-    clientSecret: "your-client-secret"
+    username: "you@example.com",
+    password: "your-password"
 );
 using var authedClient = new EnsoulClient(new EnsoulConfig(bearerToken: token.AccessToken));
 ```

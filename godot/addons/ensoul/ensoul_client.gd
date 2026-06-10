@@ -9,6 +9,7 @@ var memory:      EnsoulMemory
 var domains:     EnsoulDomains
 var simulations: EnsoulSimulations
 var aggregate:   EnsoulAggregate
+var audit:       EnsoulAudit
 var sessions:    EnsoulSessions
 var frameworks:  EnsoulFrameworks
 var auth:        EnsoulAuth
@@ -48,6 +49,7 @@ func _setup(config: EnsoulConfig) -> void:
 	domains     = EnsoulDomains.new();     domains._http = _http;  add_child(domains)
 	simulations = EnsoulSimulations.new(); simulations._http = _http; add_child(simulations)
 	aggregate   = EnsoulAggregate.new();   aggregate._http = _http; add_child(aggregate)
+	audit       = EnsoulAudit.new();       audit._http = _http;    add_child(audit)
 	sessions    = EnsoulSessions.new();    sessions._http = _http; add_child(sessions)
 	frameworks  = EnsoulFrameworks.new();  frameworks._http = _http; add_child(frameworks)
 	auth        = EnsoulAuth.new();        auth._http = _http;     add_child(auth)

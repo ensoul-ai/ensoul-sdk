@@ -74,11 +74,6 @@ class Simulations(private val client: EnsoulHttpClient) {
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 
-    suspend fun stop(simulationId: String): JsonObject {
-        val response = client.post("/v1/simulations/$simulationId/stop", json = emptyMap<String, Any?>())
-        return json.parseToJsonElement(response.bodyAsText()).jsonObject
-    }
-
     suspend fun stream(simulationId: String): SseStream {
         return client.streamSse(HttpMethod.Get, "/v1/simulations/$simulationId/stream")
     }
@@ -111,6 +106,33 @@ class Simulations(private val client: EnsoulHttpClient) {
 
     suspend fun getHistory(simulationId: String): JsonObject {
         val response = client.get("/v1/simulations/$simulationId/history")
+        return json.parseToJsonElement(response.bodyAsText()).jsonObject
+    }
+
+    /** GET /v1/simulations/{simulationId}/participants */
+    suspend fun listParticipants(
+        simulationId: String,
+        page: Int = 1,
+        perPage: Int = 20,
+    ): JsonObject {
+        val params = mapOf<String, Any?>("page" to page, "per_page" to perPage)
+        val response = client.get("/v1/simulations/$simulationId/participants", params = params)
+        return json.parseToJsonElement(response.bodyAsText()).jsonObject
+    }
+
+    /** POST /v1/simulations/{simulationId}/participants */
+    suspend fun addParticipants(
+        simulationId: String,
+        personaIds: List<String>,
+    ): JsonObject {
+        val body = mapOf<String, Any?>("persona_ids" to personaIds)
+        val response = client.post("/v1/simulations/$simulationId/participants", json = body)
+        return json.parseToJsonElement(response.bodyAsText()).jsonObject
+    }
+
+    /** GET /v1/simulations/{simulationId}/events/ticks */
+    suspend fun getEventTicks(simulationId: String): JsonObject {
+        val response = client.get("/v1/simulations/$simulationId/events/ticks")
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 }

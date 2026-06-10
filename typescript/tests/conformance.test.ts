@@ -193,8 +193,7 @@ describeConformance("Conformance Tests", () => {
     it("test_memory_create", async () => {
       const mem = await client.memory.create("p_test_001", {
         content: "Remembered something important",
-        memoryType: "episodic",
-        importance: 0.7,
+        source: "user",
       });
       expect(mem.id).toBe("mem_test_001");
     });
@@ -212,7 +211,7 @@ describeConformance("Conformance Tests", () => {
 
   describe("Sessions", () => {
     it("test_session_create", async () => {
-      const session = await client.sessions.create("p_test_001", { tier: 0 });
+      const session = await client.sessions.create({ tier: 0 });
       expect(session.id).toBe("sess_test_001");
       expect(session.tier).toBe(0);
       expect(session.parent_session_id).toBeNull();
@@ -224,8 +223,8 @@ describeConformance("Conformance Tests", () => {
   // ---------------------------------------------------------------------------
 
   describe("Aggregate", () => {
-    it("test_aggregate_query", async () => {
-      const result = await client.aggregate.query("average trait_a by region");
+    it("test_aggregate_count", async () => {
+      const result = await client.aggregate.count({ domain: "demo" });
       expect(result.sample_size).toBe(500);
       expect(result.confidence).toBe(0.95);
     });
@@ -434,6 +433,138 @@ describeConformance("Conformance Tests", () => {
       } finally {
         bearerClient.close();
       }
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Chat sessions (persisted history)
+  // ---------------------------------------------------------------------------
+
+  describe("Chat Sessions", () => {
+    it("test_create_session", async () => {
+      const session = await client.chat.createSession({
+        teamId: "team_test_001",
+        userId: "user_test_001",
+        domainId: "d_test_001",
+        personaId: "persona_test_001",
+        title: "Test Chat Session",
+      });
+      expect(session.id).toBe("csess_test_001");
+      expect(session.is_archived).toBe(false);
+    });
+
+    it("test_list_sessions", async () => {
+      const result = await client.chat.listSessions({ userId: "user_test_001" });
+      const sessions = result.sessions as unknown[];
+      const pagination = result.pagination as Record<string, unknown>;
+      expect(sessions.length).toBeGreaterThanOrEqual(1);
+      expect(pagination.total).toBe(1);
+    });
+
+    it("test_session_stats", async () => {
+      const result = await client.chat.sessionStats({
+        teamId: "team_test_001",
+        startDate: "2025-01-01",
+        endDate: "2025-01-31",
+      });
+      expect(result.total).toBe(7);
+    });
+
+    it("test_get_session", async () => {
+      const session = await client.chat.getSession("csess_test_001");
+      expect(session.id).toBe("csess_test_001");
+      expect((session.messages as unknown[]).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("test_update_session", async () => {
+      const session = await client.chat.updateSession("csess_test_001", {
+        title: "Renamed",
+      });
+      expect(session.id).toBe("csess_test_001");
+    });
+
+    it("test_archive_session", async () => {
+      const session = await client.chat.archiveSession("csess_test_001");
+      expect(session.id).toBe("csess_test_001");
+    });
+
+    it("test_delete_session", async () => {
+      await expect(
+        client.chat.deleteSession("csess_test_001"),
+      ).resolves.toBeUndefined();
+    });
+
+    it("test_add_message", async () => {
+      const message = await client.chat.addMessage("csess_test_001", {
+        role: "assistant",
+        content: "Hi",
+      });
+      expect(message.id).toBe("msg_test_002");
+      expect(message.role).toBe("assistant");
+    });
+
+    it("test_get_messages", async () => {
+      const messages = await client.chat.getMessages("csess_test_001");
+      expect(messages).toHaveLength(2);
+      expect(messages[0]!.role).toBe("user");
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Simulation participants and event ticks
+  // ---------------------------------------------------------------------------
+
+  describe("Simulation Participants", () => {
+    it("test_list_participants", async () => {
+      const result = await client.simulations.listParticipants("sim_test_001");
+      expect(result.total).toBe(2);
+      expect((result.items as unknown[]).length).toBe(2);
+    });
+
+    it("test_add_participants", async () => {
+      const sim = await client.simulations.addParticipants("sim_test_001", [
+        "persona_test_001",
+      ]);
+      expect(sim.id).toBe("sim_test_001");
+    });
+
+    it("test_event_ticks", async () => {
+      const result = await client.simulations.getEventTicks("sim_test_001");
+      expect((result.ticks as unknown[]).length).toBe(3);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Audit and verification
+  // ---------------------------------------------------------------------------
+
+  describe("Audit", () => {
+    it("test_get_event", async () => {
+      const event = await client.audit.getEvent("evt_test_001");
+      expect(event.event_id).toBe("evt_test_001");
+      expect(event.event_hash).toBeTruthy();
+    });
+
+    it("test_get_commitment", async () => {
+      const commitment = await client.audit.getCommitment("cmt_test_001");
+      expect(commitment.commitment_id).toBe("cmt_test_001");
+      expect(commitment.event_count).toBe(42);
+    });
+
+    it("test_get_proof", async () => {
+      const proof = await client.audit.getProof("evt_test_001");
+      expect(proof.verified).toBe(true);
+      expect((proof.proof_path as unknown[]).length).toBe(2);
+    });
+
+    it("test_verify", async () => {
+      const result = await client.audit.verify("evt_test_001");
+      expect(result.verified).toBe(true);
+    });
+
+    it("test_signing_key", async () => {
+      const pem = await client.audit.getSigningKey();
+      expect(pem).toContain("BEGIN PUBLIC KEY");
     });
   });
 

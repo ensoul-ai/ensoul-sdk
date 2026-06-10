@@ -141,4 +141,179 @@ public class Chat {
         let decoder = JSONDecoder()
         return try decoder.decode(ConversationResponse.self, from: data)
     }
+
+    // MARK: - Chat sessions (persisted conversation history)
+
+    /// POST /v1/chat/sessions
+    public func createSession(
+        teamId: String,
+        userId: String,
+        domainId: String,
+        personaId: String? = nil,
+        mode: String? = nil,
+        participantPersonaIds: [String]? = nil,
+        title: String? = nil
+    ) async throws -> [String: Any] {
+        var body: [String: Any] = [
+            "team_id": teamId,
+            "user_id": userId,
+            "domain_id": domainId,
+        ]
+        if let personaId { body["persona_id"] = personaId }
+        if let mode { body["mode"] = mode }
+        if let participantPersonaIds { body["participant_persona_ids"] = participantPersonaIds }
+        if let title { body["title"] = title }
+
+        let (data, _) = try await client.post("/v1/chat/sessions", body: body)
+        return try Self.jsonObject(from: data)
+    }
+
+    /// GET /v1/chat/sessions
+    public func listSessions(
+        userId: String,
+        mode: String? = nil,
+        domainId: String? = nil,
+        includeArchived: Bool? = nil,
+        page: Int = 1,
+        perPage: Int = 20
+    ) async throws -> [String: Any] {
+        var params: [String: String] = [
+            "user_id": userId,
+            "page": String(page),
+            "per_page": String(perPage),
+        ]
+        if let mode { params["mode"] = mode }
+        if let domainId { params["domain_id"] = domainId }
+        if let includeArchived { params["include_archived"] = String(includeArchived) }
+
+        let (data, _) = try await client.get("/v1/chat/sessions", params: params)
+        return try Self.jsonObject(from: data)
+    }
+
+    /// GET /v1/chat/sessions/stats
+    public func sessionStats(
+        teamId: String,
+        startDate: String,
+        endDate: String
+    ) async throws -> [String: Any] {
+        let params: [String: String] = [
+            "team_id": teamId,
+            "start_date": startDate,
+            "end_date": endDate,
+        ]
+        let (data, _) = try await client.get("/v1/chat/sessions/stats", params: params)
+        return try Self.jsonObject(from: data)
+    }
+
+    /// GET /v1/chat/sessions/{sessionId}
+    public func getSession(
+        _ sessionId: String,
+        userId: String? = nil
+    ) async throws -> [String: Any] {
+        var params: [String: String] = [:]
+        if let userId { params["user_id"] = userId }
+
+        let (data, _) = try await client.get(
+            "/v1/chat/sessions/\(sessionId)",
+            params: params.isEmpty ? nil : params
+        )
+        return try Self.jsonObject(from: data)
+    }
+
+    /// PATCH /v1/chat/sessions/{sessionId}
+    public func updateSession(
+        _ sessionId: String,
+        title: String? = nil,
+        isArchived: Bool? = nil
+    ) async throws -> [String: Any] {
+        var body: [String: Any] = [:]
+        if let title { body["title"] = title }
+        if let isArchived { body["is_archived"] = isArchived }
+
+        let (data, _) = try await client.patch(
+            "/v1/chat/sessions/\(sessionId)",
+            body: body
+        )
+        return try Self.jsonObject(from: data)
+    }
+
+    /// DELETE /v1/chat/sessions/{sessionId} — 204 No Content.
+    public func deleteSession(_ sessionId: String) async throws {
+        _ = try await client.delete("/v1/chat/sessions/\(sessionId)")
+    }
+
+    /// POST /v1/chat/sessions/{sessionId}/archive
+    public func archiveSession(_ sessionId: String) async throws -> [String: Any] {
+        let (data, _) = try await client.post(
+            "/v1/chat/sessions/\(sessionId)/archive",
+            body: [String: Any]()
+        )
+        return try Self.jsonObject(from: data)
+    }
+
+    /// POST /v1/chat/sessions/{sessionId}/messages
+    public func addMessage(
+        _ sessionId: String,
+        role: String,
+        content: String,
+        inputTokens: Int? = nil,
+        outputTokens: Int? = nil,
+        modelUsed: String? = nil,
+        metadata: [String: Any]? = nil
+    ) async throws -> [String: Any] {
+        var body: [String: Any] = ["role": role, "content": content]
+        if let inputTokens { body["input_tokens"] = inputTokens }
+        if let outputTokens { body["output_tokens"] = outputTokens }
+        if let modelUsed { body["model_used"] = modelUsed }
+        if let metadata { body["metadata"] = metadata }
+
+        let (data, _) = try await client.post(
+            "/v1/chat/sessions/\(sessionId)/messages",
+            body: body
+        )
+        return try Self.jsonObject(from: data)
+    }
+
+    /// GET /v1/chat/sessions/{sessionId}/messages — returns a bare JSON array.
+    public func getMessages(
+        _ sessionId: String,
+        limit: Int? = nil,
+        offset: Int? = nil
+    ) async throws -> [[String: Any]] {
+        var params: [String: String] = [:]
+        if let limit { params["limit"] = String(limit) }
+        if let offset { params["offset"] = String(offset) }
+
+        let (data, _) = try await client.get(
+            "/v1/chat/sessions/\(sessionId)/messages",
+            params: params.isEmpty ? nil : params
+        )
+        return try Self.jsonArray(from: data)
+    }
+
+    // MARK: - Private helpers
+
+    /// Decode response `Data` as a top-level JSON object.
+    private static func jsonObject(from data: Data) throws -> [String: Any] {
+        guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw EnsoulAPIError(
+                statusCode: 200,
+                error: "ParseError",
+                message: "Expected JSON object in chat response"
+            )
+        }
+        return dict
+    }
+
+    /// Decode response `Data` as a top-level JSON array of objects.
+    private static func jsonArray(from data: Data) throws -> [[String: Any]] {
+        guard let arr = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            throw EnsoulAPIError(
+                statusCode: 200,
+                error: "ParseError",
+                message: "Expected JSON array in chat response"
+            )
+        }
+        return arr
+    }
 }

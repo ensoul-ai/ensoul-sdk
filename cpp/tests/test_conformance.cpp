@@ -217,7 +217,9 @@ TEST_CASE("Conformance: session create", "[conformance]") {
     if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
 
     ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
-    auto sess = client.sessions().create("p_test_001", 0);
+    // As of API 0.2.0 sessions are created against the auth context (no persona
+    // in the path or body); the first positional arg is the reasoning tier.
+    auto sess = client.sessions().create(0);
     CHECK(sess["id"] == "sess_test_001");
     CHECK(sess["tier"] == 0);
     CHECK((!sess.contains("parent_session_id") || sess["parent_session_id"].is_null()));
@@ -227,14 +229,14 @@ TEST_CASE("Conformance: session create", "[conformance]") {
 // Aggregate
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Conformance: aggregate query", "[conformance]") {
+TEST_CASE("Conformance: aggregate count", "[conformance]") {
     auto url = get_conformance_url();
     if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
 
+    // As of API 0.2.0 POST /v1/aggregate/query was split into GET count + stats.
     ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
-    auto result = client.aggregate().query("Test aggregate query");
-    CHECK(result["sample_size"] == 500);
-    CHECK(result["confidence"] == 0.95);
+    auto result = client.aggregate().count();
+    CHECK(result.is_object());
 }
 
 // ---------------------------------------------------------------------------
@@ -439,6 +441,183 @@ TEST_CASE("Conformance: client custom base url", "[conformance]") {
     ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
     auto page = client.personas().list();
     REQUIRE(page.items.size() >= 1);
+}
+
+// ---------------------------------------------------------------------------
+// Chat sessions (persisted history)
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Conformance: chat create session", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto session = client.chat().create_session(
+        "team_test_001", "user_test_001", "d_test_001",
+        "persona_test_001", "", nullptr, "Test Chat Session");
+    CHECK(session["id"] == "csess_test_001");
+    CHECK(session["is_archived"] == false);
+}
+
+TEST_CASE("Conformance: chat list sessions", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto result = client.chat().list_sessions("user_test_001");
+    REQUIRE(result["sessions"].size() >= 1);
+    CHECK(result["pagination"]["total"] == 1);
+}
+
+TEST_CASE("Conformance: chat session stats", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto result = client.chat().session_stats(
+        "team_test_001", "2025-01-01", "2025-01-31");
+    CHECK(result["total"] == 7);
+}
+
+TEST_CASE("Conformance: chat get session", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto session = client.chat().get_session("csess_test_001");
+    CHECK(session["id"] == "csess_test_001");
+    REQUIRE(session["messages"].size() >= 1);
+}
+
+TEST_CASE("Conformance: chat update session", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto session = client.chat().update_session("csess_test_001", "Renamed");
+    CHECK(session["id"] == "csess_test_001");
+}
+
+TEST_CASE("Conformance: chat archive session", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto session = client.chat().archive_session("csess_test_001");
+    CHECK(session["id"] == "csess_test_001");
+}
+
+TEST_CASE("Conformance: chat delete session", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    REQUIRE_NOTHROW(client.chat().delete_session("csess_test_001"));
+}
+
+TEST_CASE("Conformance: chat add message", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto message = client.chat().add_message("csess_test_001", "assistant", "Hi");
+    CHECK(message["id"] == "msg_test_002");
+    CHECK(message["role"] == "assistant");
+}
+
+TEST_CASE("Conformance: chat get messages", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto messages = client.chat().get_messages("csess_test_001");
+    REQUIRE(messages.size() == 2);
+    CHECK(messages[0]["role"] == "user");
+}
+
+// ---------------------------------------------------------------------------
+// Simulation participants and event ticks
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Conformance: simulation list participants", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto result = client.simulations().list_participants("sim_test_001");
+    CHECK(result["total"] == 2);
+    REQUIRE(result["items"].size() == 2);
+}
+
+TEST_CASE("Conformance: simulation add participants", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto sim = client.simulations().add_participants(
+        "sim_test_001", nlohmann::json::array({"persona_test_001"}));
+    CHECK(sim["id"] == "sim_test_001");
+}
+
+TEST_CASE("Conformance: simulation event ticks", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto result = client.simulations().get_event_ticks("sim_test_001");
+    REQUIRE(result["ticks"].size() == 3);
+}
+
+// ---------------------------------------------------------------------------
+// Audit and verification
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Conformance: audit get event", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto event = client.audit().get_event("evt_test_001");
+    CHECK(event["event_id"] == "evt_test_001");
+    CHECK_FALSE(event["event_hash"].get<std::string>().empty());
+}
+
+TEST_CASE("Conformance: audit get commitment", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto commitment = client.audit().get_commitment("cmt_test_001");
+    CHECK(commitment["commitment_id"] == "cmt_test_001");
+    CHECK(commitment["event_count"] == 42);
+}
+
+TEST_CASE("Conformance: audit get proof", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto proof = client.audit().get_proof("evt_test_001");
+    CHECK(proof["verified"] == true);
+    REQUIRE(proof["proof_path"].size() == 2);
+}
+
+TEST_CASE("Conformance: audit verify", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto result = client.audit().verify("evt_test_001");
+    CHECK(result["verified"] == true);
+}
+
+TEST_CASE("Conformance: audit signing key", "[conformance]") {
+    auto url = get_conformance_url();
+    if (url.empty()) SKIP("ENSOUL_CONFORMANCE_URL not set");
+
+    ensoul::EnsoulClient client("sk_test_123", url, "", 30000, 0);
+    auto pem = client.audit().get_signing_key();
+    CHECK(pem.find("BEGIN PUBLIC KEY") != std::string::npos);
 }
 
 // ---------------------------------------------------------------------------

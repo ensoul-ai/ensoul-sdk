@@ -20,21 +20,34 @@ class Aggregate:
     def __init__(self, client: SyncHTTPClient) -> None:
         self._client = client
 
-    def query(
+    def count(
         self,
-        query: str,
         *,
-        filters: dict[str, Any] | None = None,
-        aggregation_mode: str | None = None,
+        domain: str | None = None,
+        filters: str | None = None,
+        region: str | None = None,
+        archetype: str | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
     ) -> dict:
-        """POST /v1/aggregate/query"""
-        body: dict[str, Any] = {"query": query}
-        if filters is not None:
-            body["filters"] = filters
-        if aggregation_mode is not None:
-            body["aggregation_mode"] = aggregation_mode
-        response = self._client.post("/v1/aggregate/query", json=body)
-        return response.json()
+        """GET /v1/aggregate/count — count personas matching a filter."""
+        params: dict[str, Any] = {
+            k: v
+            for k, v in {
+                "domain": domain,
+                "filters": filters,
+                "region": region,
+                "archetype": archetype,
+                "age_min": age_min,
+                "age_max": age_max,
+            }.items()
+            if v is not None
+        }
+        return self._client.get("/v1/aggregate/count", params=params).json()
+
+    def stats(self) -> dict:
+        """GET /v1/aggregate/stats — aggregate query statistics."""
+        return self._client.get("/v1/aggregate/stats").json()
 
     def stream(
         self,
@@ -81,7 +94,7 @@ class Aggregate:
         duration_days: int = 30,
         parameters: dict[str, Any] | None = None,
     ) -> dict:
-        """POST /v1/aggregate/simulate"""
+        """POST /v1/aggregate/simulation (``SimulationRequest``)."""
         body: dict[str, Any] = {
             "scenario": scenario,
             "duration_days": duration_days,
@@ -90,7 +103,7 @@ class Aggregate:
             body["target_cohort"] = target_cohort
         if parameters is not None:
             body["parameters"] = parameters
-        response = self._client.post("/v1/aggregate/simulate", json=body)
+        response = self._client.post("/v1/aggregate/simulation", json=body)
         return response.json()
 
     def trace_influence(
@@ -115,21 +128,34 @@ class AsyncAggregate:
     def __init__(self, client: AsyncHTTPClient) -> None:
         self._client = client
 
-    async def query(
+    async def count(
         self,
-        query: str,
         *,
-        filters: dict[str, Any] | None = None,
-        aggregation_mode: str | None = None,
+        domain: str | None = None,
+        filters: str | None = None,
+        region: str | None = None,
+        archetype: str | None = None,
+        age_min: int | None = None,
+        age_max: int | None = None,
     ) -> dict:
-        """POST /v1/aggregate/query"""
-        body: dict[str, Any] = {"query": query}
-        if filters is not None:
-            body["filters"] = filters
-        if aggregation_mode is not None:
-            body["aggregation_mode"] = aggregation_mode
-        response = await self._client.post("/v1/aggregate/query", json=body)
-        return response.json()
+        """GET /v1/aggregate/count — count personas matching a filter."""
+        params: dict[str, Any] = {
+            k: v
+            for k, v in {
+                "domain": domain,
+                "filters": filters,
+                "region": region,
+                "archetype": archetype,
+                "age_min": age_min,
+                "age_max": age_max,
+            }.items()
+            if v is not None
+        }
+        return (await self._client.get("/v1/aggregate/count", params=params)).json()
+
+    async def stats(self) -> dict:
+        """GET /v1/aggregate/stats — aggregate query statistics."""
+        return (await self._client.get("/v1/aggregate/stats")).json()
 
     async def stream(
         self,
@@ -176,7 +202,7 @@ class AsyncAggregate:
         duration_days: int = 30,
         parameters: dict[str, Any] | None = None,
     ) -> dict:
-        """POST /v1/aggregate/simulate"""
+        """POST /v1/aggregate/simulation (``SimulationRequest``)."""
         body: dict[str, Any] = {
             "scenario": scenario,
             "duration_days": duration_days,
@@ -185,7 +211,7 @@ class AsyncAggregate:
             body["target_cohort"] = target_cohort
         if parameters is not None:
             body["parameters"] = parameters
-        response = await self._client.post("/v1/aggregate/simulate", json=body)
+        response = await self._client.post("/v1/aggregate/simulation", json=body)
         return response.json()
 
     async def trace_influence(

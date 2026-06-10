@@ -49,9 +49,9 @@ public:
         transport_.request("DELETE", "/v1/domains/" + domain_id);
     }
 
-    nlohmann::json validate(const std::string& domain_id) {
-        auto resp = transport_.request("POST", "/v1/domains/" + domain_id + "/validate",
-                                        nlohmann::json::object());
+    // POST /v1/domains/validate — validate a domain config (DomainConfigCreate).
+    nlohmann::json validate(const nlohmann::json& config) {
+        auto resp = transport_.request("POST", "/v1/domains/validate", config);
         return nlohmann::json::parse(resp.body);
     }
 

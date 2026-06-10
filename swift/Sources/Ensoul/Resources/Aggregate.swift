@@ -29,23 +29,34 @@ public class Aggregate {
         self.client = client
     }
 
-    // MARK: - Query
+    // MARK: - Count
 
-    /// POST /v1/aggregate/query
-    ///
-    /// Runs a synchronous aggregate query and returns the result as a raw
-    /// JSON dictionary. Applies optional demographic filters and an aggregation
-    /// mode (e.g. `"mean"`, `"distribution"`).
-    public func query(
-        _ query: String,
-        filters: [String: Any]? = nil,
-        aggregationMode: String? = nil
+    /// GET /v1/aggregate/count — count personas matching a filter.
+    public func count(
+        domain: String? = nil,
+        filters: String? = nil,
+        region: String? = nil,
+        archetype: String? = nil,
+        ageMin: Int? = nil,
+        ageMax: Int? = nil
     ) async throws -> [String: Any] {
-        var body: [String: Any] = ["query": query]
-        if let filters { body["filters"] = filters }
-        if let aggregationMode { body["aggregation_mode"] = aggregationMode }
+        var params: [String: String] = [:]
+        if let domain { params["domain"] = domain }
+        if let filters { params["filters"] = filters }
+        if let region { params["region"] = region }
+        if let archetype { params["archetype"] = archetype }
+        if let ageMin { params["age_min"] = String(ageMin) }
+        if let ageMax { params["age_max"] = String(ageMax) }
 
-        let (data, _) = try await client.post("/v1/aggregate/query", body: body)
+        let (data, _) = try await client.get("/v1/aggregate/count", params: params)
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Stats
+
+    /// GET /v1/aggregate/stats — aggregate query statistics.
+    public func stats() async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/aggregate/stats")
         return try Self.jsonObject(from: data)
     }
 
@@ -112,7 +123,7 @@ public class Aggregate {
 
     // MARK: - Simulate
 
-    /// POST /v1/aggregate/simulate
+    /// POST /v1/aggregate/simulation (`SimulationRequest`).
     ///
     /// Runs a forward simulation for a given scenario against an optional
     /// target cohort and returns the projected outcome as a raw JSON dictionary.
@@ -129,7 +140,7 @@ public class Aggregate {
         if let targetCohort { body["target_cohort"] = targetCohort }
         if let parameters { body["parameters"] = parameters }
 
-        let (data, _) = try await client.post("/v1/aggregate/simulate", body: body)
+        let (data, _) = try await client.post("/v1/aggregate/simulation", body: body)
         return try Self.jsonObject(from: data)
     }
 

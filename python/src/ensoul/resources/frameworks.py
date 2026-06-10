@@ -67,9 +67,9 @@ class Frameworks:
         """DELETE /v1/frameworks/{framework_id}"""
         self._client.delete(f"/v1/frameworks/{framework_id}")
 
-    def validate(self, framework_id: str) -> dict:
-        """POST /v1/frameworks/{framework_id}/validate"""
-        response = self._client.post(f"/v1/frameworks/{framework_id}/validate", json={})
+    def validations(self, framework_id: str) -> dict:
+        """GET /v1/frameworks/{framework_id}/validations"""
+        response = self._client.get(f"/v1/frameworks/{framework_id}/validations")
         return response.json()
 
     def get_instruments(self, framework_id: str) -> list:
@@ -132,9 +132,9 @@ class AsyncFrameworks:
         """DELETE /v1/frameworks/{framework_id}"""
         await self._client.delete(f"/v1/frameworks/{framework_id}")
 
-    async def validate(self, framework_id: str) -> dict:
-        """POST /v1/frameworks/{framework_id}/validate"""
-        response = await self._client.post(f"/v1/frameworks/{framework_id}/validate", json={})
+    async def validations(self, framework_id: str) -> dict:
+        """GET /v1/frameworks/{framework_id}/validations"""
+        response = await self._client.get(f"/v1/frameworks/{framework_id}/validations")
         return response.json()
 
     async def get_instruments(self, framework_id: str) -> list:

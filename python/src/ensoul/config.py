@@ -12,7 +12,7 @@ __all__ = [
     "API_VERSION",
 ]
 
-DEFAULT_BASE_URL = "https://api.ensoul.ai"
+DEFAULT_BASE_URL = "https://api.ensoul-ai.com"
 DEFAULT_TIMEOUT = 30.0
 DEFAULT_MAX_RETRIES = 2
 API_VERSION = "v1"
@@ -29,5 +29,5 @@ class ClientConfig:
 
     @property
     def api_url(self) -> str:
-        """Base URL with API version, e.g., https://api.ensoul.ai/v1"""
+        """Base URL with API version, e.g., https://api.ensoul-ai.com/v1"""
         return f"{self.base_url.rstrip('/')}/{API_VERSION}"

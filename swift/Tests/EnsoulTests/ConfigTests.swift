@@ -8,7 +8,7 @@ final class ConfigTests: XCTestCase {
 
     func test_config_defaultBaseURL() {
         let config = ClientConfig()
-        XCTAssertEqual(config.baseURL, "https://api.ensoul.ai")
+        XCTAssertEqual(config.baseURL, "https://api.ensoul-ai.com")
     }
 
     func test_config_defaultTimeout() {
@@ -71,18 +71,18 @@ final class ConfigTests: XCTestCase {
     // MARK: - apiURL derived property
 
     func test_config_apiURL_appendsVersionToBaseURL() {
-        let config = ClientConfig(baseURL: "https://api.ensoul.ai")
-        XCTAssertEqual(config.apiURL, "https://api.ensoul.ai/v1")
+        let config = ClientConfig(baseURL: "https://api.ensoul-ai.com")
+        XCTAssertEqual(config.apiURL, "https://api.ensoul-ai.com/v1")
     }
 
     func test_config_apiURL_stripsTrailingSlash() {
-        let config = ClientConfig(baseURL: "https://api.ensoul.ai/")
-        XCTAssertEqual(config.apiURL, "https://api.ensoul.ai/v1")
+        let config = ClientConfig(baseURL: "https://api.ensoul-ai.com/")
+        XCTAssertEqual(config.apiURL, "https://api.ensoul-ai.com/v1")
     }
 
     func test_config_apiURL_stripsMultipleTrailingSlashes() {
-        let config = ClientConfig(baseURL: "https://api.ensoul.ai///")
-        XCTAssertEqual(config.apiURL, "https://api.ensoul.ai/v1")
+        let config = ClientConfig(baseURL: "https://api.ensoul-ai.com///")
+        XCTAssertEqual(config.apiURL, "https://api.ensoul-ai.com/v1")
     }
 
     func test_config_apiURL_customBaseURL() {

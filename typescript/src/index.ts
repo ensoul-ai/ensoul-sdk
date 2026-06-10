@@ -1,6 +1,6 @@
 /**
  * Ensoul SDK for TypeScript/JavaScript.
- * @module @ensoul/sdk
+ * @module @ensoul-ai/sdk
  */
 
 export { SDK_VERSION as VERSION } from "./config.js";
@@ -42,6 +42,7 @@ export { Chat } from "./resources/chat.js";
 export { Domains } from "./resources/domains.js";
 export { Simulations } from "./resources/simulations.js";
 export { Aggregate } from "./resources/aggregate.js";
+export { Audit } from "./resources/audit.js";
 export { Memory } from "./resources/memory.js";
 export { Sessions } from "./resources/sessions.js";
 export { Frameworks } from "./resources/frameworks.js";

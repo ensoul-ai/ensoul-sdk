@@ -5,6 +5,7 @@ import { Chat } from "./resources/chat.js";
 import { Domains } from "./resources/domains.js";
 import { Simulations } from "./resources/simulations.js";
 import { Aggregate } from "./resources/aggregate.js";
+import { Audit } from "./resources/audit.js";
 import { Memory } from "./resources/memory.js";
 import { Sessions } from "./resources/sessions.js";
 import { Frameworks } from "./resources/frameworks.js";
@@ -27,6 +28,7 @@ export class Ensoul {
   readonly domains: Domains;
   readonly simulations: Simulations;
   readonly aggregate: Aggregate;
+  readonly audit: Audit;
   readonly memory: Memory;
   readonly sessions: Sessions;
   readonly frameworks: Frameworks;
@@ -45,6 +47,7 @@ export class Ensoul {
     this.domains = new Domains(this._client);
     this.simulations = new Simulations(this._client);
     this.aggregate = new Aggregate(this._client);
+    this.audit = new Audit(this._client);
     this.memory = new Memory(this._client);
     this.sessions = new Sessions(this._client);
     this.frameworks = new Frameworks(this._client);

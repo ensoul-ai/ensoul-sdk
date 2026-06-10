@@ -1,17 +1,18 @@
 /// Info resource for the Ensoul Swift SDK.
 ///
-/// Wraps the `/v1/info` family of endpoints that expose API configuration,
-/// rate-limit details, access-tier definitions, and feature flags.
-///
-/// These endpoints are read-only and do not require write permissions beyond
-/// standard authentication.
+/// As of API 0.2.0 the four `/v1/info/*` routes were replaced by a single
+/// `GET /v1/api/info` returning an `APIInfoResponse` blob. The convenience
+/// methods below each fetch that blob and return their relevant sub-section, so
+/// existing call sites keep working without four separate round-trips becoming
+/// four copies of the same payload. See
+/// `sdks/openapi/namespace-migration-contract.md`.
 ///
 /// Example:
 /// ```swift
-/// let config     = try await client.info.config()
-/// let limits     = try await client.info.rateLimits()
-/// let tiers      = try await client.info.tiers()
-/// let features   = try await client.info.features()
+/// let info     = try await client.info.get()
+/// let limits   = try await client.info.rateLimits()
+/// let tiers    = try await client.info.tiers()
+/// let features = try await client.info.features()
 /// ```
 import Foundation
 
@@ -25,49 +26,30 @@ public class Info {
         self.client = client
     }
 
-    // MARK: - Config
+    /// GET /v1/api/info — full server info (`APIInfoResponse`).
+    public func get() async throws -> [String: Any] {
+        let (data, _) = try await client.get("/v1/api/info")
+        return try Self.jsonObject(from: data)
+    }
 
-    /// GET /v1/info/config
-    ///
-    /// Returns the current API configuration as a raw JSON dictionary.
-    /// Useful for inspecting server-side defaults and capabilities.
+    /// Full server configuration blob (alias for ``get()``).
     public func config() async throws -> [String: Any] {
-        let (data, _) = try await client.get("/v1/info/config")
-        return try Self.jsonObject(from: data)
+        return try await get()
     }
 
-    // MARK: - Rate Limits
-
-    /// GET /v1/info/rate-limits
-    ///
-    /// Returns the rate-limit details for the current access tier, including
-    /// per-endpoint limits and reset windows.
+    /// Rate-limiting configuration sub-section.
     public func rateLimits() async throws -> [String: Any] {
-        let (data, _) = try await client.get("/v1/info/rate-limits")
-        return try Self.jsonObject(from: data)
+        return (try await get())["rate_limiting"] as? [String: Any] ?? [:]
     }
 
-    // MARK: - Tiers
-
-    /// GET /v1/info/tiers
-    ///
-    /// Returns definitions for all available access tiers (FREE, STARTER, PRO,
-    /// ENTERPRISE), including their feature entitlements and rate limits.
-    public func tiers() async throws -> [String: Any] {
-        let (data, _) = try await client.get("/v1/info/tiers")
-        return try Self.jsonObject(from: data)
+    /// Access-tier definitions sub-section.
+    public func tiers() async throws -> [Any] {
+        return (try await get())["access_tiers"] as? [Any] ?? []
     }
 
-    // MARK: - Features
-
-    /// GET /v1/info/features
-    ///
-    /// Returns the feature flag state for the current authenticated account.
-    /// Use this to check which optional capabilities are enabled before calling
-    /// the corresponding endpoints.
+    /// Feature-flags sub-section.
     public func features() async throws -> [String: Any] {
-        let (data, _) = try await client.get("/v1/info/features")
-        return try Self.jsonObject(from: data)
+        return (try await get())["features"] as? [String: Any] ?? [:]
     }
 
     // MARK: - Private helpers

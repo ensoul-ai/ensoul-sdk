@@ -18,6 +18,7 @@ namespace Ensoul
         public AuthResource Auth { get; }
         public HealthResource Health { get; }
         public InfoResource Info { get; }
+        public AuditResource Audit { get; }
 
         private readonly EnsoulHttpClient _http;
 
@@ -35,6 +36,7 @@ namespace Ensoul
             Auth        = new AuthResource(_http);
             Health      = new HealthResource(_http);
             Info        = new InfoResource(_http);
+            Audit       = new AuditResource(_http);
         }
 
         public EnsoulClient(string apiKey)
@@ -61,6 +63,7 @@ namespace Ensoul
             Auth        = new AuthResource(_http);
             Health      = new HealthResource(_http);
             Info        = new InfoResource(_http);
+            Audit       = new AuditResource(_http);
         }
 
         public void Dispose() => _http.Dispose();

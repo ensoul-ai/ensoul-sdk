@@ -64,12 +64,6 @@ public:
         return nlohmann::json::parse(resp.body);
     }
 
-    nlohmann::json stop(const std::string& simulation_id) {
-        auto resp = transport_.request("POST", "/v1/simulations/" + simulation_id + "/stop",
-                                        nlohmann::json::object());
-        return nlohmann::json::parse(resp.body);
-    }
-
     SseStream stream(const std::string& simulation_id) {
         auto raw = transport_.stream_sse_raw("GET",
             "/v1/simulations/" + simulation_id + "/stream");
@@ -98,6 +92,34 @@ public:
 
     nlohmann::json get_history(const std::string& simulation_id) {
         auto resp = transport_.request("GET", "/v1/simulations/" + simulation_id + "/history");
+        return nlohmann::json::parse(resp.body);
+    }
+
+    // GET /v1/simulations/{simulation_id}/participants
+    nlohmann::json list_participants(const std::string& simulation_id,
+                                     int page = 1, int per_page = 20) {
+        std::map<std::string, std::string> params = {
+            {"page", std::to_string(page)},
+            {"per_page", std::to_string(per_page)}
+        };
+        auto resp = transport_.request("GET",
+            "/v1/simulations/" + simulation_id + "/participants", nullptr, params);
+        return nlohmann::json::parse(resp.body);
+    }
+
+    // POST /v1/simulations/{simulation_id}/participants
+    nlohmann::json add_participants(const std::string& simulation_id,
+                                    const nlohmann::json& persona_ids) {
+        nlohmann::json body = {{"persona_ids", persona_ids}};
+        auto resp = transport_.request("POST",
+            "/v1/simulations/" + simulation_id + "/participants", body);
+        return nlohmann::json::parse(resp.body);
+    }
+
+    // GET /v1/simulations/{simulation_id}/events/ticks
+    nlohmann::json get_event_ticks(const std::string& simulation_id) {
+        auto resp = transport_.request("GET",
+            "/v1/simulations/" + simulation_id + "/events/ticks");
         return nlohmann::json::parse(resp.body);
     }
 

@@ -39,19 +39,19 @@ TEST_CASE("EnsoulClient simulations namespace accessible", "[client]") {
 
 TEST_CASE("EnsoulClient aggregate namespace accessible", "[client]") {
     auto [client, mock] = make_test_client_with_response(200, R"({"result": "ok"})");
-    auto result = client.aggregate().query("test");
+    auto result = client.aggregate().count();
     CHECK(result.contains("result"));
 }
 
 TEST_CASE("EnsoulClient memory namespace accessible", "[client]") {
-    auto [client, mock] = make_test_client_with_response(200, R"({"id": "m1"})");
-    auto result = client.memory().get("p1", "m1");
-    CHECK(result["id"] == "m1");
+    auto [client, mock] = make_test_client_with_response(200, R"({"persona_id": "p1", "memories": [], "working_memory": [], "total": 0})");
+    auto result = client.memory().list("p1");
+    CHECK(result["persona_id"] == "p1");
 }
 
 TEST_CASE("EnsoulClient sessions namespace accessible", "[client]") {
     auto [client, mock] = make_test_client_with_response(200, R"({"id": "s1"})");
-    auto result = client.sessions().get("p1", "s1");
+    auto result = client.sessions().get("s1");
     CHECK(result["id"] == "s1");
 }
 

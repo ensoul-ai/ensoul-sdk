@@ -78,14 +78,14 @@ public class Domains {
 
     // MARK: - Validate
 
-    /// POST /v1/domains/{domainId}/validate
+    /// POST /v1/domains/validate
     ///
-    /// Triggers server-side validation of the domain configuration and returns
-    /// a validation result dict (e.g. `{ "valid": true, "errors": [] }`).
-    public func validate(_ domainId: String) async throws -> [String: Any] {
+    /// Validates a domain configuration (`DomainConfigCreate`) and returns a
+    /// validation result dict (e.g. `{ "valid": true, "errors": [] }`).
+    public func validate(_ config: [String: Any]) async throws -> [String: Any] {
         let (data, _) = try await client.post(
-            "/v1/domains/\(domainId)/validate",
-            body: [String: Any]()
+            "/v1/domains/validate",
+            body: config
         )
         return try Self.jsonObject(from: data)
     }

@@ -1,7 +1,7 @@
 class_name EnsoulConfig
 extends Resource
 
-const DEFAULT_BASE_URL     := "https://demo.ensoul-ai.com/api"
+const DEFAULT_BASE_URL     := "https://api.ensoul-ai.com"
 const DEFAULT_TIMEOUT_SEC  := 30.0
 const DEFAULT_MAX_RETRIES  := 3
 const DEFAULT_RETRY_BASE   := 1.0

@@ -25,7 +25,7 @@ final class ChatTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001/chat")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001/chat")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, ChatFixtures.data())
         }
@@ -45,7 +45,7 @@ final class ChatTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001/chat")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001/chat")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, ChatFixtures.data())
         }
@@ -63,7 +63,7 @@ final class ChatTests: XCTestCase {
 
     func test_chat_send_decodesChatResponse() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001/chat")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001/chat")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, ChatFixtures.data())
         }
@@ -82,7 +82,7 @@ final class ChatTests: XCTestCase {
 
     func test_chat_send_decodesTokenUsage() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001/chat")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001/chat")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, ChatFixtures.data())
         }
@@ -100,7 +100,7 @@ final class ChatTests: XCTestCase {
 
     func test_chat_send_401_throwsAuthenticationError() async throws {
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001/chat")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001/chat")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 401)
             return (response, ErrorFixtures.data(ErrorFixtures.invalidToken))
         }
@@ -120,7 +120,7 @@ final class ChatTests: XCTestCase {
         var capturedRequest: URLRequest?
         MockURLProtocol.requestHandler = { request in
             capturedRequest = request
-            let url = URL(string: "https://api.ensoul.ai/v1/personas/persona_test_001/chat")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas/persona_test_001/chat")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, ChatFixtures.data())
         }

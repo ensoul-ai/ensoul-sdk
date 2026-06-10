@@ -189,7 +189,7 @@ final class PaginationTests: XCTestCase {
     func test_autoPagingSequence_singlePage_yieldsAllItems() async throws {
         let session = makeSession()
         MockURLProtocol.requestHandler = { _ in
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
             return (response, PersonaFixtures.data(PersonaFixtures.listEnvelope(page: 1, pages: 1)))
         }
@@ -222,7 +222,7 @@ final class PaginationTests: XCTestCase {
         var callCount = 0
         MockURLProtocol.requestHandler = { _ in
             callCount += 1
-            let url = URL(string: "https://api.ensoul.ai/v1/personas")!
+            let url = URL(string: "https://api.ensoul-ai.com/v1/personas")!
             let response = MockURLProtocol.makeResponse(for: url, statusCode: 200)
 
             if callCount <= 1 {

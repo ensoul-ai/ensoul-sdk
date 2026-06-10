@@ -40,12 +40,12 @@ class TestClientConfig:
         assert config.custom_headers == {"X-Custom": "value"}
 
     def test_api_url_property(self):
-        config = ClientConfig(base_url="https://api.ensoul.ai")
-        assert config.api_url == f"https://api.ensoul.ai/{API_VERSION}"
+        config = ClientConfig(base_url="https://api.ensoul-ai.com")
+        assert config.api_url == f"https://api.ensoul-ai.com/{API_VERSION}"
 
     def test_api_url_strips_trailing_slash(self):
-        config = ClientConfig(base_url="https://api.ensoul.ai/")
-        assert config.api_url == f"https://api.ensoul.ai/{API_VERSION}"
+        config = ClientConfig(base_url="https://api.ensoul-ai.com/")
+        assert config.api_url == f"https://api.ensoul-ai.com/{API_VERSION}"
         # should not have double slashes
         assert "//" not in config.api_url.replace("https://", "")
 

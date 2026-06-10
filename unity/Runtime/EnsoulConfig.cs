@@ -5,7 +5,7 @@ namespace Ensoul
 {
     public class EnsoulConfig
     {
-        public const string DefaultBaseUrl = "https://api.ensoul.ai";
+        public const string DefaultBaseUrl = "https://api.ensoul-ai.com";
         public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
         public const int DefaultMaxRetries = 2;
         public const string ApiVersion = "v1";

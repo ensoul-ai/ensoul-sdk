@@ -4,17 +4,30 @@ import { SSEStream } from "../streaming.js";
 export class Aggregate {
   constructor(private readonly client: HTTPClient) {}
 
-  async query(
-    query: string,
+  /** GET /v1/aggregate/count — count personas matching a filter. */
+  async count(
     options: {
-      filters?: Record<string, unknown>;
-      aggregationMode?: string;
+      domain?: string;
+      filters?: string;
+      region?: string;
+      archetype?: string;
+      ageMin?: number;
+      ageMax?: number;
     } = {},
   ): Promise<Record<string, unknown>> {
-    const body: Record<string, unknown> = { query };
-    if (options.filters != null) body.filters = options.filters;
-    if (options.aggregationMode != null) body.aggregation_mode = options.aggregationMode;
-    return this.client.post("/v1/aggregate/query", body);
+    const params: Record<string, unknown> = {};
+    if (options.domain != null) params.domain = options.domain;
+    if (options.filters != null) params.filters = options.filters;
+    if (options.region != null) params.region = options.region;
+    if (options.archetype != null) params.archetype = options.archetype;
+    if (options.ageMin != null) params.age_min = options.ageMin;
+    if (options.ageMax != null) params.age_max = options.ageMax;
+    return this.client.get("/v1/aggregate/count", params);
+  }
+
+  /** GET /v1/aggregate/stats — aggregate query statistics. */
+  async stats(): Promise<Record<string, unknown>> {
+    return this.client.get("/v1/aggregate/stats");
   }
 
   async stream(
@@ -61,7 +74,7 @@ export class Aggregate {
     };
     if (options.targetCohort != null) body.target_cohort = options.targetCohort;
     if (options.parameters != null) body.parameters = options.parameters;
-    return this.client.post("/v1/aggregate/simulate", body);
+    return this.client.post("/v1/aggregate/simulation", body);
   }
 
   async traceInfluence(

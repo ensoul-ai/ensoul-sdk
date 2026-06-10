@@ -1,4 +1,9 @@
-"""Memory resource for the Ensoul SDK."""
+"""Memory resource for the Ensoul SDK.
+
+Maps to the ``/v1/memory/*`` API namespace. As of API 0.2.0 the memory routes
+were rebased off ``/v1/personas/{id}/memories`` onto ``/v1/memory/{persona_id}``;
+see ``sdks/openapi/namespace-migration-contract.md``.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ensoul.http import AsyncHTTPClient, SyncHTTPClient
-    from ensoul.pagination import AsyncPage, SyncPage
 
 __all__ = [
     "Memory",
@@ -20,82 +24,87 @@ class Memory:
     def __init__(self, client: SyncHTTPClient) -> None:
         self._client = client
 
+    def stats(self) -> dict:
+        """GET /v1/memory/stats — global memory statistics."""
+        return self._client.get("/v1/memory/stats").json()
+
     def create(
         self,
         persona_id: str,
         *,
         content: str,
-        memory_type: str = "episodic",
-        importance: float = 0.5,
-        metadata: dict | None = None,
+        source: str = "user",
+        references: dict | None = None,
     ) -> dict:
-        """POST /v1/personas/{persona_id}/memories"""
-        body: dict[str, Any] = {
-            "content": content,
-            "memory_type": memory_type,
-            "importance": importance,
-        }
-        if metadata is not None:
-            body["metadata"] = metadata
-        response = self._client.post(f"/v1/personas/{persona_id}/memories", json=body)
-        return response.json()
+        """POST /v1/memory/{persona_id} — add a memory (``MemoryCreate``)."""
+        body: dict[str, Any] = {"content": content, "source": source}
+        if references is not None:
+            body["references"] = references
+        return self._client.post(f"/v1/memory/{persona_id}", json=body).json()
 
     def list(
         self,
         persona_id: str,
         *,
-        page: int = 1,
-        per_page: int = 20,
-    ) -> SyncPage:
-        """GET /v1/personas/{persona_id}/memories"""
-        from ensoul.pagination import SyncPage
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict:
+        """GET /v1/memory/{persona_id} — list memories.
 
-        params: dict[str, Any] = {"page": page, "per_page": per_page}
-        response = self._client.get(f"/v1/personas/{persona_id}/memories", params=params)
-        data = response.json()
-        raw_items: list[dict] = data.get("items", [])
-        return SyncPage(
-            items=raw_items,
-            total=data.get("total", len(raw_items)),
-            page=data.get("page", page),
-            per_page=data.get("per_page", per_page),
-            pages=data.get("pages", 1),
-            client=self._client,
-            method="GET",
-            path=f"/v1/personas/{persona_id}/memories",
-            params=params,
-            model=lambda x: x,
-        )
+        Returns the ``MemoriesResponse`` shape
+        ``{persona_id, memories, working_memory, total}`` (not a paginated
+        envelope — the API does not page this route).
+        """
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        return self._client.get(f"/v1/memory/{persona_id}", params=params).json()
 
-    def get(self, persona_id: str, memory_id: str) -> dict:
-        """GET /v1/personas/{persona_id}/memories/{memory_id}"""
-        response = self._client.get(f"/v1/personas/{persona_id}/memories/{memory_id}")
-        return response.json()
+    def clear(self, persona_id: str) -> None:
+        """DELETE /v1/memory/{persona_id} — delete all memories for a persona."""
+        self._client.delete(f"/v1/memory/{persona_id}")
 
     def delete(self, persona_id: str, memory_id: str) -> None:
-        """DELETE /v1/personas/{persona_id}/memories/{memory_id}"""
-        self._client.delete(f"/v1/personas/{persona_id}/memories/{memory_id}")
+        """DELETE /v1/memory/{persona_id}/{memory_id} — delete one memory."""
+        self._client.delete(f"/v1/memory/{persona_id}/{memory_id}")
+
+    def update_access(self, persona_id: str, memory_id: str) -> dict:
+        """PATCH /v1/memory/{persona_id}/{memory_id}/access — record an access."""
+        return self._client.patch(
+            f"/v1/memory/{persona_id}/{memory_id}/access"
+        ).json()
 
     def batch_create(self, persona_id: str, memories: list[dict]) -> dict:
-        """POST /v1/personas/{persona_id}/memories/batch"""
-        response = self._client.post(
-            f"/v1/personas/{persona_id}/memories/batch",
+        """POST /v1/memory/{persona_id}/batch — add many memories at once."""
+        return self._client.post(
+            f"/v1/memory/{persona_id}/batch",
             json={"memories": memories},
-        )
-        return response.json()
+        ).json()
 
     def consolidate(self, persona_id: str) -> dict:
-        """POST /v1/personas/{persona_id}/memories/consolidate"""
-        response = self._client.post(f"/v1/personas/{persona_id}/memories/consolidate", json={})
-        return response.json()
+        """POST /v1/memory/{persona_id}/consolidate — consolidate memories."""
+        return self._client.post(
+            f"/v1/memory/{persona_id}/consolidate", json={}
+        ).json()
 
-    def query_knowledge(self, persona_id: str, query: str) -> dict:
-        """POST /v1/personas/{persona_id}/knowledge/query"""
-        response = self._client.post(
-            f"/v1/personas/{persona_id}/knowledge/query",
-            json={"query": query},
-        )
-        return response.json()
+    def generate(self, persona_id: str, **kwargs: Any) -> dict:
+        """POST /v1/memory/{persona_id}/generate — generate memories."""
+        return self._client.post(
+            f"/v1/memory/{persona_id}/generate", json=dict(kwargs)
+        ).json()
+
+    def working(self, persona_id: str) -> dict:
+        """GET /v1/memory/{persona_id}/working — working-memory snapshot."""
+        return self._client.get(f"/v1/memory/{persona_id}/working").json()
+
+    def get_knowledge(self, persona_id: str) -> dict:
+        """GET /v1/memory/{persona_id}/knowledge — retrieve RAG knowledge."""
+        return self._client.get(f"/v1/memory/{persona_id}/knowledge").json()
+
+    def add_knowledge(self, persona_id: str, *, content: str, source: str) -> dict:
+        """POST /v1/memory/{persona_id}/knowledge — add RAG knowledge (``KnowledgeCreate``)."""
+        return self._client.post(
+            f"/v1/memory/{persona_id}/knowledge",
+            json={"content": content, "source": source},
+        ).json()
 
 
 class AsyncMemory:
@@ -104,79 +113,84 @@ class AsyncMemory:
     def __init__(self, client: AsyncHTTPClient) -> None:
         self._client = client
 
+    async def stats(self) -> dict:
+        """GET /v1/memory/stats — global memory statistics."""
+        return (await self._client.get("/v1/memory/stats")).json()
+
     async def create(
         self,
         persona_id: str,
         *,
         content: str,
-        memory_type: str = "episodic",
-        importance: float = 0.5,
-        metadata: dict | None = None,
+        source: str = "user",
+        references: dict | None = None,
     ) -> dict:
-        """POST /v1/personas/{persona_id}/memories"""
-        body: dict[str, Any] = {
-            "content": content,
-            "memory_type": memory_type,
-            "importance": importance,
-        }
-        if metadata is not None:
-            body["metadata"] = metadata
-        response = await self._client.post(f"/v1/personas/{persona_id}/memories", json=body)
-        return response.json()
+        """POST /v1/memory/{persona_id} — add a memory (``MemoryCreate``)."""
+        body: dict[str, Any] = {"content": content, "source": source}
+        if references is not None:
+            body["references"] = references
+        return (await self._client.post(f"/v1/memory/{persona_id}", json=body)).json()
 
     async def list(
         self,
         persona_id: str,
         *,
-        page: int = 1,
-        per_page: int = 20,
-    ) -> AsyncPage:
-        """GET /v1/personas/{persona_id}/memories"""
-        from ensoul.pagination import AsyncPage
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict:
+        """GET /v1/memory/{persona_id} — list memories (``MemoriesResponse``)."""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        return (await self._client.get(f"/v1/memory/{persona_id}", params=params)).json()
 
-        params: dict[str, Any] = {"page": page, "per_page": per_page}
-        response = await self._client.get(f"/v1/personas/{persona_id}/memories", params=params)
-        data = response.json()
-        raw_items: list[dict] = data.get("items", [])
-        return AsyncPage(
-            items=raw_items,
-            total=data.get("total", len(raw_items)),
-            page=data.get("page", page),
-            per_page=data.get("per_page", per_page),
-            pages=data.get("pages", 1),
-            client=self._client,
-            method="GET",
-            path=f"/v1/personas/{persona_id}/memories",
-            params=params,
-            model=lambda x: x,
-        )
-
-    async def get(self, persona_id: str, memory_id: str) -> dict:
-        """GET /v1/personas/{persona_id}/memories/{memory_id}"""
-        response = await self._client.get(f"/v1/personas/{persona_id}/memories/{memory_id}")
-        return response.json()
+    async def clear(self, persona_id: str) -> None:
+        """DELETE /v1/memory/{persona_id} — delete all memories for a persona."""
+        await self._client.delete(f"/v1/memory/{persona_id}")
 
     async def delete(self, persona_id: str, memory_id: str) -> None:
-        """DELETE /v1/personas/{persona_id}/memories/{memory_id}"""
-        await self._client.delete(f"/v1/personas/{persona_id}/memories/{memory_id}")
+        """DELETE /v1/memory/{persona_id}/{memory_id} — delete one memory."""
+        await self._client.delete(f"/v1/memory/{persona_id}/{memory_id}")
+
+    async def update_access(self, persona_id: str, memory_id: str) -> dict:
+        """PATCH /v1/memory/{persona_id}/{memory_id}/access — record an access."""
+        return (
+            await self._client.patch(f"/v1/memory/{persona_id}/{memory_id}/access")
+        ).json()
 
     async def batch_create(self, persona_id: str, memories: list[dict]) -> dict:
-        """POST /v1/personas/{persona_id}/memories/batch"""
-        response = await self._client.post(
-            f"/v1/personas/{persona_id}/memories/batch",
-            json={"memories": memories},
-        )
-        return response.json()
+        """POST /v1/memory/{persona_id}/batch — add many memories at once."""
+        return (
+            await self._client.post(
+                f"/v1/memory/{persona_id}/batch", json={"memories": memories}
+            )
+        ).json()
 
     async def consolidate(self, persona_id: str) -> dict:
-        """POST /v1/personas/{persona_id}/memories/consolidate"""
-        response = await self._client.post(f"/v1/personas/{persona_id}/memories/consolidate", json={})
-        return response.json()
+        """POST /v1/memory/{persona_id}/consolidate — consolidate memories."""
+        return (
+            await self._client.post(f"/v1/memory/{persona_id}/consolidate", json={})
+        ).json()
 
-    async def query_knowledge(self, persona_id: str, query: str) -> dict:
-        """POST /v1/personas/{persona_id}/knowledge/query"""
-        response = await self._client.post(
-            f"/v1/personas/{persona_id}/knowledge/query",
-            json={"query": query},
-        )
-        return response.json()
+    async def generate(self, persona_id: str, **kwargs: Any) -> dict:
+        """POST /v1/memory/{persona_id}/generate — generate memories."""
+        return (
+            await self._client.post(
+                f"/v1/memory/{persona_id}/generate", json=dict(kwargs)
+            )
+        ).json()
+
+    async def working(self, persona_id: str) -> dict:
+        """GET /v1/memory/{persona_id}/working — working-memory snapshot."""
+        return (await self._client.get(f"/v1/memory/{persona_id}/working")).json()
+
+    async def get_knowledge(self, persona_id: str) -> dict:
+        """GET /v1/memory/{persona_id}/knowledge — retrieve RAG knowledge."""
+        return (await self._client.get(f"/v1/memory/{persona_id}/knowledge")).json()
+
+    async def add_knowledge(self, persona_id: str, *, content: str, source: str) -> dict:
+        """POST /v1/memory/{persona_id}/knowledge — add RAG knowledge (``KnowledgeCreate``)."""
+        return (
+            await self._client.post(
+                f"/v1/memory/{persona_id}/knowledge",
+                json={"content": content, "source": source},
+            )
+        ).json()

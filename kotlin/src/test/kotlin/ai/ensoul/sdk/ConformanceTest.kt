@@ -13,13 +13,17 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.ktor.http.*
 import kotlinx.coroutines.flow.toList
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 private val CONFORMANCE_URL: String? = System.getenv("ENSOUL_CONFORMANCE_URL")
@@ -204,7 +208,7 @@ class ConformanceTest : FunSpec({
     // -----------------------------------------------------------------------
 
     test("session create") {
-        val session = client.sessions.create(personaId = "p_test_001")
+        val session = client.sessions.create()
         session["id"]!!.jsonPrimitive.contentOrNull shouldBe "sess_test_001"
         session["tier"]!!.jsonPrimitive.int shouldBe 0
         session["parent_session_id"]!! shouldBe kotlinx.serialization.json.JsonNull
@@ -214,8 +218,8 @@ class ConformanceTest : FunSpec({
     // Aggregate
     // -----------------------------------------------------------------------
 
-    test("aggregate query") {
-        val result = client.aggregate.query(query = "What do you think about X?")
+    test("aggregate count") {
+        val result = client.aggregate.count(domain = "test_domain")
         result["sample_size"]!!.jsonPrimitive.int shouldBe 500
         result["confidence"]!!.jsonPrimitive.double shouldBe 0.95
     }
@@ -397,6 +401,126 @@ class ConformanceTest : FunSpec({
         val page = client.frameworks.list(perPage = 2)
         val allItems = page.autoPagingFlow().toList()
         allItems.size shouldBe 3
+    }
+
+    // -----------------------------------------------------------------------
+    // Chat sessions (persisted history)
+    // -----------------------------------------------------------------------
+
+    test("create session") {
+        val session = client.chat.createSession(
+            teamId = "team_test_001",
+            userId = "user_test_001",
+            domainId = "d_test_001",
+            personaId = "persona_test_001",
+            title = "Test Chat Session",
+        )
+        session["id"]!!.jsonPrimitive.contentOrNull shouldBe "csess_test_001"
+        session["is_archived"]!!.jsonPrimitive.boolean shouldBe false
+    }
+
+    test("list sessions") {
+        val result = client.chat.listSessions(userId = "user_test_001")
+        result["sessions"]!!.jsonArray.size shouldBeGreaterThanOrEqual 1
+        result["pagination"]!!.jsonObject["total"]!!.jsonPrimitive.int shouldBe 1
+    }
+
+    test("session stats") {
+        val result = client.chat.sessionStats(
+            teamId = "team_test_001",
+            startDate = "2025-01-01",
+            endDate = "2025-01-31",
+        )
+        result["total"]!!.jsonPrimitive.int shouldBe 7
+    }
+
+    test("get session") {
+        val session = client.chat.getSession("csess_test_001")
+        session["id"]!!.jsonPrimitive.contentOrNull shouldBe "csess_test_001"
+        session["messages"]!!.jsonArray.size shouldBeGreaterThanOrEqual 1
+    }
+
+    test("update session") {
+        val session = client.chat.updateSession("csess_test_001", title = "Renamed")
+        session["id"]!!.jsonPrimitive.contentOrNull shouldBe "csess_test_001"
+    }
+
+    test("archive session") {
+        val session = client.chat.archiveSession("csess_test_001")
+        session["id"]!!.jsonPrimitive.contentOrNull shouldBe "csess_test_001"
+    }
+
+    test("delete session") {
+        // 204 No Content — no exception means success.
+        client.chat.deleteSession("csess_test_001")
+    }
+
+    test("add message") {
+        val message = client.chat.addMessage(
+            "csess_test_001",
+            role = "assistant",
+            content = "Hi",
+        )
+        message["id"]!!.jsonPrimitive.contentOrNull shouldBe "msg_test_002"
+        message["role"]!!.jsonPrimitive.contentOrNull shouldBe "assistant"
+    }
+
+    test("get messages") {
+        val messages = client.chat.getMessages("csess_test_001")
+        messages.size shouldBe 2
+        messages[0]["role"]!!.jsonPrimitive.contentOrNull shouldBe "user"
+    }
+
+    // -----------------------------------------------------------------------
+    // Simulation participants and event ticks
+    // -----------------------------------------------------------------------
+
+    test("list participants") {
+        val result = client.simulations.listParticipants("sim_test_001")
+        result["total"]!!.jsonPrimitive.int shouldBe 2
+        result["items"]!!.jsonArray.size shouldBe 2
+    }
+
+    test("add participants") {
+        val sim = client.simulations.addParticipants("sim_test_001", listOf("persona_test_001"))
+        sim["id"]!!.jsonPrimitive.contentOrNull shouldBe "sim_test_001"
+    }
+
+    test("event ticks") {
+        val result = client.simulations.getEventTicks("sim_test_001")
+        result["ticks"]!!.jsonArray.size shouldBe 3
+    }
+
+    // -----------------------------------------------------------------------
+    // Audit and verification
+    // -----------------------------------------------------------------------
+
+    test("audit get event") {
+        val event = client.audit.getEvent("evt_test_001")
+        event["event_id"]!!.jsonPrimitive.contentOrNull shouldBe "evt_test_001"
+        event["event_hash"]!!.jsonPrimitive.content.shouldNotBeBlank()
+    }
+
+    test("audit get commitment") {
+        val commitment = client.audit.getCommitment("cmt_test_001")
+        commitment["commitment_id"]!!.jsonPrimitive.contentOrNull shouldBe "cmt_test_001"
+        commitment["event_count"]!!.jsonPrimitive.int shouldBe 42
+    }
+
+    test("audit get proof") {
+        val proof = client.audit.getProof("evt_test_001")
+        proof["verified"]!!.jsonPrimitive.boolean shouldBe true
+        proof["proof_path"]!!.jsonArray.size shouldBe 2
+    }
+
+    test("audit verify") {
+        val result = client.audit.verify("evt_test_001")
+        result["verified"]!!.jsonPrimitive.boolean shouldBe true
+    }
+
+    test("audit signing key") {
+        val pem = client.audit.getSigningKey()
+        pem shouldContain "BEGIN PUBLIC KEY"
     }
 
     } // if CONFORMANCE_URL

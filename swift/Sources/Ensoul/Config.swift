@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - Constants
 
-public let defaultBaseURL = "https://api.ensoul.ai"
+public let defaultBaseURL = "https://api.ensoul-ai.com"
 public let defaultTimeout: TimeInterval = 30
 public let defaultMaxRetries: Int = 2
 public let apiVersion = "v1"
@@ -38,7 +38,7 @@ public struct ClientConfig {
 
     // MARK: Derived
 
-    /// Fully-qualified versioned API root, e.g. `https://api.ensoul.ai/v1`.
+    /// Fully-qualified versioned API root, e.g. `https://api.ensoul-ai.com/v1`.
     public var apiURL: String {
         var base = baseURL
         while base.hasSuffix("/") { base = String(base.dropLast()) }

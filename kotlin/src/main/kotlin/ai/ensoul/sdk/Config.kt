@@ -1,6 +1,6 @@
 package ai.ensoul.sdk
 
-const val DEFAULT_BASE_URL = "https://api.ensoul.ai"
+const val DEFAULT_BASE_URL = "https://api.ensoul-ai.com"
 const val DEFAULT_TIMEOUT = 30_000L  // milliseconds for Ktor
 const val DEFAULT_MAX_RETRIES = 2
 const val API_VERSION = "v1"

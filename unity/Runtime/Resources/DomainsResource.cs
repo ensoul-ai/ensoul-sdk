@@ -55,10 +55,11 @@ namespace Ensoul.Resources
         public async Task DeleteAsync(string domainId)
             => await _client.DeleteAsync($"/v1/domains/{domainId}");
 
-        public async Task<JObject> ValidateAsync(string domainId)
+        /// <summary>POST /v1/domains/validate — validate a domain config (<c>DomainConfigCreate</c>).</summary>
+        public async Task<JObject> ValidateAsync(Dictionary<string, object?> config)
         {
             var response = await _client.RequestAsync(
-                HttpMethod.Post, $"/v1/domains/{domainId}/validate", json: new Dictionary<string, object?>());
+                HttpMethod.Post, "/v1/domains/validate", json: config);
             var text = await response.Content.ReadAsStringAsync();
             return JObject.Parse(text);
         }

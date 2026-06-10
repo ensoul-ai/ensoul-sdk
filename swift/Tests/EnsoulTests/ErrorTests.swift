@@ -290,7 +290,7 @@ final class ErrorTests: XCTestCase {
         statusCode: Int,
         headers: [String: String] = [:]
     ) -> HTTPURLResponse {
-        let url = URL(string: "https://api.ensoul.ai/v1/test")!
+        let url = URL(string: "https://api.ensoul-ai.com/v1/test")!
         return HTTPURLResponse(
             url: url,
             statusCode: statusCode,

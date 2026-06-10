@@ -26,8 +26,9 @@ func delete(framework_id: String) -> Dictionary:
 	return await _http.delete("/frameworks/%s" % framework_id)
 
 
-func validate(framework_id: String) -> Dictionary:
-	return await _http.post("/frameworks/%s/validate" % framework_id)
+func validations(framework_id: String) -> Dictionary:
+	## GET /v1/frameworks/{framework_id}/validations
+	return await _http.get_req("/frameworks/%s/validations" % framework_id)
 
 
 func get_instruments(framework_id: String) -> Dictionary:

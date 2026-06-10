@@ -187,12 +187,10 @@ class TestMemory:
         mem = client.memory.create(
             "p_test_001",
             content="Remembers meeting a friend at the park",
-            memory_type="episodic",
-            importance=0.7,
+            source="user",
         )
         assert mem["id"] == "mem_test_001"
         assert mem["persona_id"] == "p_test_001"
-        assert mem["memory_type"] == "episodic"
 
     def test_memory_delete(self, client):
         result = client.memory.delete("p_test_001", "mem_test_001")
@@ -206,9 +204,8 @@ class TestMemory:
 
 class TestSessions:
     def test_session_create(self, client):
-        session = client.sessions.create("p_test_001", tier=0)
+        session = client.sessions.create(tier=0)
         assert session["id"] == "sess_test_001"
-        assert session["persona_id"] == "p_test_001"
         assert session["tier"] == 0
         assert session["parent_session_id"] is None
 
@@ -219,11 +216,10 @@ class TestSessions:
 
 
 class TestAggregate:
-    def test_aggregate_query(self, client):
-        result = client.aggregate.query("average trait_a by region")
+    def test_aggregate_count(self, client):
+        result = client.aggregate.count(domain="demo")
         assert result["sample_size"] == 500
         assert result["confidence"] == 0.95
-        assert result["aggregation_mode"] == "mean"
 
 
 # ---------------------------------------------------------------------------
@@ -394,6 +390,120 @@ class TestAuth:
             assert len(page.items) >= 1
         finally:
             c.close()
+
+
+# ---------------------------------------------------------------------------
+# Chat sessions (persisted history)
+# ---------------------------------------------------------------------------
+
+
+class TestChatSessions:
+    def test_create_session(self, client):
+        session = client.chat.create_session(
+            team_id="team_test_001",
+            user_id="user_test_001",
+            domain_id="d_test_001",
+            persona_id="persona_test_001",
+            title="Test Chat Session",
+        )
+        assert session["id"] == "csess_test_001"
+        assert session["is_archived"] is False
+
+    def test_list_sessions(self, client):
+        result = client.chat.list_sessions(user_id="user_test_001")
+        assert len(result["sessions"]) >= 1
+        assert result["pagination"]["total"] == 1
+
+    def test_session_stats(self, client):
+        result = client.chat.session_stats(
+            team_id="team_test_001",
+            start_date="2025-01-01",
+            end_date="2025-01-31",
+        )
+        assert result["total"] == 7
+
+    def test_get_session(self, client):
+        session = client.chat.get_session("csess_test_001")
+        assert session["id"] == "csess_test_001"
+        assert len(session["messages"]) >= 1
+
+    def test_update_session(self, client):
+        session = client.chat.update_session(
+            "csess_test_001", title="Renamed"
+        )
+        assert session["id"] == "csess_test_001"
+
+    def test_archive_session(self, client):
+        session = client.chat.archive_session("csess_test_001")
+        assert session["id"] == "csess_test_001"
+
+    def test_delete_session(self, client):
+        # 204 No Content — returns None without raising.
+        assert client.chat.delete_session("csess_test_001") is None
+
+    def test_add_message(self, client):
+        message = client.chat.add_message(
+            "csess_test_001", role="assistant", content="Hi"
+        )
+        assert message["id"] == "msg_test_002"
+        assert message["role"] == "assistant"
+
+    def test_get_messages(self, client):
+        messages = client.chat.get_messages("csess_test_001")
+        assert len(messages) == 2
+        assert messages[0]["role"] == "user"
+
+
+# ---------------------------------------------------------------------------
+# Simulation participants and event ticks
+# ---------------------------------------------------------------------------
+
+
+class TestSimulationParticipants:
+    def test_list_participants(self, client):
+        result = client.simulations.list_participants("sim_test_001")
+        assert result["total"] == 2
+        assert len(result["items"]) == 2
+
+    def test_add_participants(self, client):
+        sim = client.simulations.add_participants(
+            "sim_test_001", ["persona_test_001"]
+        )
+        assert sim["id"] == "sim_test_001"
+
+    def test_event_ticks(self, client):
+        result = client.simulations.get_event_ticks("sim_test_001")
+        assert len(result["ticks"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# Audit and verification
+# ---------------------------------------------------------------------------
+
+
+class TestAudit:
+    def test_get_event(self, client):
+        event = client.audit.get_event("evt_test_001")
+        assert event["event_id"] == "evt_test_001"
+        assert event["event_hash"]
+
+    def test_get_commitment(self, client):
+        commitment = client.audit.get_commitment("cmt_test_001")
+        assert commitment["commitment_id"] == "cmt_test_001"
+        assert commitment["event_count"] == 42
+
+    def test_get_proof(self, client):
+        proof = client.audit.get_proof("evt_test_001")
+        assert proof["verified"] is True
+        assert len(proof["proof_path"]) == 2
+
+    def test_verify(self, client):
+        result = client.audit.verify("evt_test_001")
+        assert result["verified"] is True
+
+    def test_signing_key(self, client):
+        pem = client.audit.get_signing_key()
+        assert "BEGIN PUBLIC KEY" in pem
 
 
 # ---------------------------------------------------------------------------

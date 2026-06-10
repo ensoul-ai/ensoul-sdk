@@ -5,7 +5,7 @@
 
 namespace ensoul {
 
-inline constexpr const char* DEFAULT_BASE_URL = "https://api.ensoul.ai";
+inline constexpr const char* DEFAULT_BASE_URL = "https://api.ensoul-ai.com";
 inline constexpr long DEFAULT_TIMEOUT_MS = 30000;
 inline constexpr int DEFAULT_MAX_RETRIES = 2;
 inline constexpr const char* API_VERSION = "v1";

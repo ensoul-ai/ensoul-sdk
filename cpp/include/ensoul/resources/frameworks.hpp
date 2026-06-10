@@ -48,9 +48,10 @@ public:
         transport_.request("DELETE", "/v1/frameworks/" + framework_id);
     }
 
-    nlohmann::json validate(const std::string& framework_id) {
-        auto resp = transport_.request("POST",
-            "/v1/frameworks/" + framework_id + "/validate", nlohmann::json::object());
+    // GET /v1/frameworks/{framework_id}/validations
+    nlohmann::json validations(const std::string& framework_id) {
+        auto resp = transport_.request("GET",
+            "/v1/frameworks/" + framework_id + "/validations");
         return nlohmann::json::parse(resp.body);
     }
 

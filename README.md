@@ -1,6 +1,9 @@
 # Ensoul SDK
 
-Official SDK suite for the [Ensoul](https://ensoul-ai.com) API — a domain-agnostic personality simulation framework for creating authentic, evolving synthetic populations at scale.
+Official SDK suite for the [Ensoul](https://ensoul-ai.com) API, a domain-agnostic personality simulation framework for creating authentic, evolving synthetic populations at scale.
+
+**Upgrading from 0.1.x?** 0.2.0 is a breaking release that realigns every SDK
+with the live API. See [MIGRATION.md](MIGRATION.md).
 
 ## SDKs
 
@@ -19,14 +22,14 @@ All SDKs share a unified architecture:
 - **HTTP transport** with retry, rate-limiting, and dual auth (API key + OAuth2)
 - **SSE streaming** for chat, aggregate queries, simulations, and memory generation
 - **Auto-pagination** with `auto_paging_iter()` / `autoPagingIter()` helpers
-- **11 resource namespaces**: personas, chat, domains, simulations, aggregate, memory, sessions, frameworks, auth, health, info
+- **12 resource namespaces**: personas, chat, domains, simulations, aggregate, memory, sessions, frameworks, auth, health, info, audit
 
 ## Quick Start
 
 ### Prerequisites
 
 - **API key** — request one from the Ensoul team
-- **Demo API** at `https://demo.ensoul-ai.com/api`
+- **Demo API** at `https://api.demo.ensoul-ai.com`
 
 ### Environment
 
@@ -34,7 +37,7 @@ All SDKs read the same environment variables:
 
 ```bash
 export ENSOUL_API_KEY="your-api-key-here"
-export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
+export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 ```
 
 ---
@@ -44,7 +47,7 @@ export ENSOUL_BASE_URL="https://demo.ensoul-ai.com/api"
 **Requirements:** Python 3.11+
 
 ```bash
-pip install https://github.com/ensoul-ai/ensoul-sdk/releases/download/v0.1.0/ensoul-0.1.0-py3-none-any.whl
+pip install https://github.com/ensoul-ai/ensoul-sdk/releases/download/v0.2.0/ensoul-0.2.0-py3-none-any.whl
 ```
 
 ```python
@@ -82,7 +85,7 @@ page = await async_client.personas.list()
 echo "@ensoul-ai:registry=https://npm.pkg.github.com" >> .npmrc
 echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> .npmrc
 
-npm install @ensoul-ai/sdk@0.1.0
+npm install @ensoul-ai/sdk@0.2.0
 ```
 
 ```typescript
@@ -132,7 +135,7 @@ repositories {
 }
 
 dependencies {
-    implementation("ai.ensoul:ensoul-sdk:0.1.0")
+    implementation("ai.ensoul:ensoul-sdk:0.2.0")
 }
 ```
 
@@ -165,7 +168,7 @@ Add to `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ensoul-ai/ensoul-sdk.git", from: "0.1.0")
+    .package(url: "https://github.com/ensoul-ai/ensoul-sdk.git", from: "0.2.0")
 ]
 ```
 
@@ -200,7 +203,7 @@ Add to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "ai.ensoul.sdk": "https://github.com/ensoul-ai/ensoul-sdk.git?path=unity#v0.1.0",
+    "com.ensoul.sdk": "https://github.com/ensoul-ai/ensoul-sdk.git?path=unity#v0.2.0",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   }
 }
@@ -236,7 +239,7 @@ Add to `CMakeLists.txt`:
 include(FetchContent)
 FetchContent_Declare(ensoul
   GIT_REPOSITORY https://github.com/ensoul-ai/ensoul-sdk.git
-  GIT_TAG v0.1.0
+  GIT_TAG v0.2.0
   SOURCE_SUBDIR cpp
 )
 FetchContent_MakeAvailable(ensoul)
@@ -278,7 +281,7 @@ int main() {
 Copy the addon into your project:
 
 ```bash
-git clone --depth 1 --branch v0.1.0 https://github.com/ensoul-ai/ensoul-sdk.git /tmp/ensoul-sdk
+git clone --depth 1 --branch v0.2.0 https://github.com/ensoul-ai/ensoul-sdk.git /tmp/ensoul-sdk
 cp -r /tmp/ensoul-sdk/godot/addons/ensoul your-project/addons/ensoul
 ```
 
@@ -286,7 +289,7 @@ Enable the plugin in **Project > Project Settings > Plugins > Ensoul**.
 
 ```gdscript
 func _ready() -> void:
-    Ensoul.configure("ens_your_api_key", "https://demo.ensoul-ai.com/api")
+    Ensoul.configure("ens_your_api_key", "https://api.demo.ensoul-ai.com")
 
     # Health check
     var health := await Ensoul.health.check()
@@ -335,11 +338,11 @@ token_response = client.auth.token_exchange(username="...", password="...")
 | Issue | Solution |
 |-------|----------|
 | **401 Unauthorized** | Verify `ENSOUL_API_KEY` is set and valid |
-| **Connection error** | Check `ENSOUL_BASE_URL` is set to `https://demo.ensoul-ai.com/api` |
+| **Connection error** | Check `ENSOUL_BASE_URL` is set to `https://api.demo.ensoul-ai.com` |
 | **npm 401 (TypeScript)** | Your `.npmrc` needs a GitHub PAT with `read:packages` scope |
 | **Maven 401 (Kotlin)** | Set `GITHUB_ACTOR` and `GITHUB_TOKEN` (PAT with `read:packages`) |
 | **SPM resolve fails (Swift)** | Ensure Swift 5.9+ and the repo URL ends in `.git` |
-| **Unity package not found** | Ensure git URL includes `?path=unity` and `#v0.1.0` |
+| **Unity package not found** | Ensure git URL includes `?path=unity` and `#v0.2.0` |
 | **C++ OpenSSL not found** | Install OpenSSL dev headers, or the SDK falls back to HTTP |
 
 ## License
