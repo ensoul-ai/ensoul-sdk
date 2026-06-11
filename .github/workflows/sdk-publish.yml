@@ -25,7 +25,13 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Dispatched (e.g. from main): take the version from the TS
+            # manifest; the checks below still enforce all manifests agree.
+            VERSION=$(node -p "require('./typescript/package.json').version")
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Publishing version: $VERSION"
 
