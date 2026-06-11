@@ -28,8 +28,7 @@ All SDKs share a unified architecture:
 
 ### Prerequisites
 
-- **API key** — request one from the Ensoul team
-- **Demo API** at `https://api.demo.ensoul-ai.com`
+- **API key** — create one in [Ensoul Studio](https://ensoul-ai.com) under Settings → API Keys
 
 ### Environment
 
@@ -37,7 +36,8 @@ All SDKs read the same environment variables:
 
 ```bash
 export ENSOUL_API_KEY="your-api-key-here"
-export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
+# Optional — defaults to https://api.ensoul-ai.com
+export ENSOUL_BASE_URL="https://api.ensoul-ai.com"
 ```
 
 ---
@@ -47,7 +47,7 @@ export ENSOUL_BASE_URL="https://api.demo.ensoul-ai.com"
 **Requirements:** Python 3.11+
 
 ```bash
-pip install https://github.com/ensoul-ai/ensoul-sdk/releases/download/v0.2.0/ensoul-0.2.0-py3-none-any.whl
+pip install ensoul
 ```
 
 ```python
@@ -81,11 +81,7 @@ page = await async_client.personas.list()
 **Requirements:** Node 18+
 
 ```bash
-# Configure GitHub npm registry
-echo "@ensoul-ai:registry=https://npm.pkg.github.com" >> .npmrc
-echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> .npmrc
-
-npm install @ensoul-ai/sdk@0.2.0
+npm install @ensoul-ai/sdk
 ```
 
 ```typescript
@@ -289,7 +285,7 @@ Enable the plugin in **Project > Project Settings > Plugins > Ensoul**.
 
 ```gdscript
 func _ready() -> void:
-    Ensoul.configure("ens_your_api_key", "https://api.demo.ensoul-ai.com")
+    Ensoul.configure("ens_your_api_key", "https://api.ensoul-ai.com")
 
     # Health check
     var health := await Ensoul.health.check()
@@ -338,7 +334,7 @@ token_response = client.auth.token_exchange(username="...", password="...")
 | Issue | Solution |
 |-------|----------|
 | **401 Unauthorized** | Verify `ENSOUL_API_KEY` is set and valid |
-| **Connection error** | Check `ENSOUL_BASE_URL` is set to `https://api.demo.ensoul-ai.com` |
+| **Connection error** | Check `ENSOUL_BASE_URL` is unset or set to `https://api.ensoul-ai.com` |
 | **npm 401 (TypeScript)** | Your `.npmrc` needs a GitHub PAT with `read:packages` scope |
 | **Maven 401 (Kotlin)** | Set `GITHUB_ACTOR` and `GITHUB_TOKEN` (PAT with `read:packages`) |
 | **SPM resolve fails (Swift)** | Ensure Swift 5.9+ and the repo URL ends in `.git` |
