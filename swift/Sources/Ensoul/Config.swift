@@ -15,7 +15,7 @@ public let apiVersion = "v1"
 /// All properties have sensible defaults; only supply what you need:
 /// ```swift
 /// let config = ClientConfig(apiKey: "ens_...")
-/// let config = ClientConfig(bearerToken: jwt, baseURL: "https://staging.ensoul.ai")
+/// let config = ClientConfig(bearerToken: jwt, baseURL: "https://staging.ensoul-ai.com")
 /// ```
 public struct ClientConfig {
     /// Base URL for the Ensoul API (no trailing slash).

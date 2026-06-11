@@ -10,7 +10,7 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
 authors = [
-    { name = "Ensoul", email = "support@ensoul.ai" },
+    { name = "Ensoul", email = "support@ensoul-ai.com" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

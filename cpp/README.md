@@ -35,17 +35,14 @@ cmake -DCPPHTTPLIB_OPENSSL_SUPPORT=ON ..
 int main() {
     ensoul::EnsoulClient client("your-api-key");
 
-    // Create a persona
-    auto persona = client.personas().create({
-        {"name", "Aria"},
-        {"domain", "my_domain"}
-    });
+    // Create a persona (returns a typed PersonaResponse)
+    auto persona = client.personas().create("Aria", "my_domain");
 
-    std::cout << "Created: " << persona["id"] << "\n";
+    std::cout << "Created: " << persona.id << "\n";
 
-    // Send a chat message
-    auto reply = client.chat().send(persona["id"], "Hello, how are you?");
-    std::cout << reply["response"] << "\n";
+    // Send a chat message (returns a typed ChatResponse)
+    auto reply = client.chat().send(persona.id, "Hello, how are you?");
+    std::cout << reply.response << "\n";
 
     return 0;
 }
@@ -58,35 +55,37 @@ The API key can also be set via the `ENSOUL_API_KEY` environment variable, in wh
 Chat and aggregate endpoints support server-sent events via a pull-iterator interface:
 
 ```cpp
-auto stream = client.chat().stream_sse(persona_id, "Tell me a story.");
+auto stream = client.chat().stream(persona_id, "Tell me a story.");
 
-for (auto event = stream.next(); event; event = stream.next()) {
-    std::cout << event->data;
+ensoul::SseEvent event;
+while (stream.next_event(event)) {
+    std::cout << event.data;
 }
 std::cout << "\n";
 ```
 
-The `SseStream` object holds the connection open and yields one `SseEvent` per call to `next()`. It returns `std::nullopt` when the stream ends.
+`next_event()` fills the passed `SseEvent` and returns `true` for each event, or `false` once the stream is exhausted. Use `ensoul::parse_chat_event(event)` to turn a raw `SseEvent` into a typed `ChatStreamEvent`.
 
 ## Pagination
 
 List endpoints return a `Page<T>` that supports automatic pagination via a callback:
 
 ```cpp
-client.personas().list().for_each_item([](const nlohmann::json& persona) {
-    std::cout << persona["id"] << " - " << persona["name"] << "\n";
+client.personas().list().for_each_item([](const ensoul::PersonaResponse& persona) {
+    std::cout << persona.id << " - " << persona.name << "\n";
 });
 ```
 
-To iterate manually or limit pages:
+To iterate manually or limit pages (`list` takes `page` and `per_page`):
 
 ```cpp
-auto page = client.personas().list({{"limit", 20}});
-while (page) {
-    for (auto& item : page->items) {
-        process(item);
+auto page = client.personas().list(1, 20);
+while (true) {
+    for (const auto& persona : page.items) {
+        std::cout << persona.id << "\n";
     }
-    page = page->next_page();
+    if (!page.has_next_page()) break;
+    page = page.next_page();
 }
 ```
 
@@ -102,11 +101,11 @@ try {
 } catch (const ensoul::NotFoundError& e) {
     std::cerr << "Not found: " << e.what() << "\n";
 } catch (const ensoul::RateLimitError& e) {
-    std::cerr << "Rate limited, retry after: " << e.retry_after_seconds() << "s\n";
+    std::cerr << "Rate limited, retry after: " << e.retry_after << "s\n";
 } catch (const ensoul::AuthenticationError& e) {
     std::cerr << "Invalid credentials\n";
 } catch (const ensoul::ApiError& e) {
-    std::cerr << "API error " << e.status_code() << ": " << e.what() << "\n";
+    std::cerr << "API error " << e.status_code << ": " << e.what() << "\n";
 } catch (const ensoul::EnsoulError& e) {
     std::cerr << "SDK error: " << e.what() << "\n";
 }

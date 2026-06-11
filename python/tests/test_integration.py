@@ -95,6 +95,7 @@ def test_persona(client):
     that require write access.
     """
     from ensoul.errors import ServerError as EnsoulServerError
+    from ensoul.errors import AuthorizationError
 
     created = False
     try:
@@ -103,10 +104,14 @@ def test_persona(client):
             domain=INTEGRATION_DOMAIN,
         )
         created = True
-    except EnsoulServerError:
+    except (EnsoulServerError, AuthorizationError):
+        # ServerError: DB schema mismatch. AuthorizationError: this principal lacks
+        # edit access on the domain (create now requires it) and the domain has not
+        # opted into public contributions — so fall back to a read-only seeded
+        # persona and skip the write-path assertions.
         page = client.personas.list(per_page=1)
         if not page.items:
-            pytest.skip("Persona create failed (DB mismatch) and no existing personas available")
+            pytest.skip("Persona create unavailable (authz/DB) and no existing personas to borrow")
         persona = page.items[0]
 
     yield persona
