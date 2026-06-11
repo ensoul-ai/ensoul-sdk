@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  # Manual dispatch (run on a tag ref) re-publishes ONLY to public npmjs via
+  # Trusted Publishing — the GitHub-Packages jobs are skipped because they 409
+  # on already-published versions.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -52,6 +56,7 @@ jobs:
   publish-python:
     name: Publish Python wheel
     needs: validate
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +83,7 @@ jobs:
   publish-typescript:
     name: Publish TypeScript to GitHub npm
     needs: validate
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -100,9 +106,44 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish-npmjs:
+    name: Publish TypeScript to npmjs (Trusted Publishing)
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@ensoul-ai'
+
+      # Trusted Publishing (OIDC) requires npm >= 11.5.1
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
+
+      - name: Install and build
+        working-directory: typescript
+        run: |
+          npm ci
+          npm run build
+
+      # No token: auth is the GitHub OIDC token exchanged via the npmjs
+      # Trusted Publisher config (org ensoul-ai / repo ensoul-sdk / this file).
+      - name: Publish
+        working-directory: typescript
+        run: npm publish
+
   publish-kotlin:
     name: Publish Kotlin to GitHub Maven
     needs: validate
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +164,8 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [validate, publish-python, publish-typescript, publish-kotlin]
+    needs: [validate, publish-python, publish-typescript, publish-kotlin, publish-npmjs]
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
