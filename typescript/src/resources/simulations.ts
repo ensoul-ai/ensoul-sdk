@@ -16,14 +16,20 @@ export class Simulations {
 
   async create(options: {
     name: string;
-    domainId: string;
+    /** `domain` is accepted as an alias; `domainId` takes precedence when both are given. */
+    domainId?: string;
+    domain?: string;
     description?: string;
     config?: Record<string, unknown>;
     participantPersonaIds?: string[];
   }): Promise<SimulationDetailResponse> {
+    const domainId = options.domainId ?? options.domain;
+    if (domainId == null) {
+      throw new TypeError("create() requires 'domainId' (or its alias 'domain')");
+    }
     const body: Record<string, unknown> = {
       name: options.name,
-      domain_id: options.domainId,
+      domain_id: domainId,
     };
     if (options.description != null) body.description = options.description;
     if (options.config != null) body.config = options.config;

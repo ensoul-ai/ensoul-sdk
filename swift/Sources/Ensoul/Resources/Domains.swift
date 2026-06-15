@@ -59,6 +59,48 @@ public class Domains {
         return try Self.jsonObject(from: data)
     }
 
+    /// POST /v1/domains — create a domain from a strongly-typed
+    /// ``DomainConfigCreate``.
+    ///
+    /// This is step 1 of the dev workflow. To build the config with the AI wizard
+    /// instead of by hand, call ``generate(description:context:targetSections:)``
+    /// first and pass its ``GeneratedConfigResponse/config`` here.
+    public func create(config: DomainConfigCreate) async throws -> [String: Any] {
+        let (data, _) = try await client.post("/v1/domains", body: try Self.jsonBody(from: config))
+        return try Self.jsonObject(from: data)
+    }
+
+    // MARK: - Generate (AI wizard)
+
+    /// POST /v1/domains/generate
+    ///
+    /// Generate a domain configuration from a natural-language `description`
+    /// using the Claude AI wizard (requires the PRO tier).
+    ///
+    /// The returned ``GeneratedConfigResponse/config`` is a ready-to-use
+    /// ``DomainConfigCreate`` that can be passed straight to
+    /// ``create(config:)``.
+    ///
+    /// - Parameters:
+    ///   - description: Natural-language description of the domain (10-5000 chars).
+    ///   - context: Additional context for the generator (example personas,
+    ///     inspiration, etc.). Defaults to empty.
+    ///   - targetSections: Which sections to generate. Defaults to `["all"]`.
+    public func generate(
+        description: String,
+        context: [String: Any] = [:],
+        targetSections: [String] = ["all"]
+    ) async throws -> GeneratedConfigResponse {
+        var body: [String: Any] = [
+            "description": description,
+            "target_sections": targetSections,
+        ]
+        if !context.isEmpty { body["context"] = context }
+
+        let (data, _) = try await client.post("/v1/domains/generate", body: body)
+        return try JSONDecoder().decode(GeneratedConfigResponse.self, from: data)
+    }
+
     // MARK: - Update
 
     /// PUT /v1/domains/{domainId}
@@ -91,6 +133,21 @@ public class Domains {
     }
 
     // MARK: - Private helpers
+
+    /// Encode a `Codable` request model into a `[String: Any]` body for the
+    /// transport layer. The model's `CodingKeys` produce the API's snake_case
+    /// keys, and nil optionals are omitted (synthesized `encodeIfPresent`).
+    private static func jsonBody<T: Encodable>(from value: T) throws -> [String: Any] {
+        let data = try JSONEncoder().encode(value)
+        guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw EnsoulAPIError(
+                statusCode: 0,
+                error: "EncodeError",
+                message: "Expected a JSON object when encoding domain request body"
+            )
+        }
+        return dict
+    }
 
     /// Decode response `Data` as a top-level JSON object.
     private static func jsonObject(from data: Data) throws -> [String: Any] {

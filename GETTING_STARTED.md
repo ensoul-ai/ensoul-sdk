@@ -19,7 +19,7 @@ export ENSOUL_BASE_URL="https://api.ensoul-ai.com"
 
 ## Python
 
-**Requirements:** Python 3.11+
+**Requirements:** Python 3.11+. On Python 3.9 or 3.10, `pip install ensoul` fails with no compatible version. Check your version with `python --version` and upgrade if needed.
 
 ### Install
 

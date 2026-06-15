@@ -40,6 +40,11 @@ export {
 export { Personas } from "./resources/personas.js";
 export { Chat } from "./resources/chat.js";
 export { Domains } from "./resources/domains.js";
+export type {
+  DomainConfigCreateInput,
+  GenerateDomainOptions,
+  GeneratedConfigResponse,
+} from "./resources/domains.js";
 export { Simulations } from "./resources/simulations.js";
 export { Aggregate } from "./resources/aggregate.js";
 export { Audit } from "./resources/audit.js";

@@ -28,14 +28,41 @@ console.log(reply.response);
 
 Chat and aggregate endpoints support server-sent events. The stream is an async iterable.
 
+Each event's `data` is a JSON object. The delta text lives in the **`chunk`** field:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `chunk` | `string` | The text delta. Append these to build the full reply. |
+| `conversationId` | `string` | Stable across the stream. Pass it back to continue the conversation. |
+| `chunkIndex` | `number` | 0-based position of this chunk in the stream. |
+| `isFinal` | `boolean` | `true` on the last event. Its `chunk` is empty (`""`). |
+| `tokenUsage` | `object \| undefined` | Present only on the final event. |
+
+Use `parseChatEvent` to turn each raw `SSEEvent` into a typed `ChatStreamEvent`
+(camelCase fields), then write `chunk` as it arrives:
+
 ```typescript
+import { parseChatEvent } from "@ensoul-ai/sdk";
+
 const stream = await client.chat.stream("persona_abc123", "Tell me a story.");
 
 for await (const event of stream.events()) {
-  const data = JSON.parse(event.data);
-  if (!data.is_final) {
-    process.stdout.write(data.chunk);
+  const parsed = parseChatEvent(event);
+  process.stdout.write(parsed.chunk); // print text as it streams
+  if (parsed.isFinal) {
+    process.stdout.write("\n");
+    if (parsed.tokenUsage) console.log("tokens:", parsed.tokenUsage);
   }
+}
+```
+
+If you prefer to read the raw payload yourself, the JSON uses snake_case keys
+(`chunk`, `conversation_id`, `chunk_index`, `is_final`, `token_usage`):
+
+```typescript
+for await (const event of stream.events()) {
+  const data = JSON.parse(event.data);
+  process.stdout.write(data.chunk);
 }
 ```
 

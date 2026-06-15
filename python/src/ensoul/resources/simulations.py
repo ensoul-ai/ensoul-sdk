@@ -27,13 +27,25 @@ class Simulations:
         self,
         *,
         name: str,
-        domain_id: str,
+        domain_id: str | None = None,
+        domain: str | None = None,
         description: str | None = None,
         config: dict[str, Any] | None = None,
         participant_persona_ids: list[str] | None = None,
     ) -> SimulationDetailResponse:
-        """POST /v1/simulations"""
-        body: dict[str, Any] = {"name": name, "domain_id": domain_id}
+        """POST /v1/simulations
+
+        ``domain`` is accepted as an alias for ``domain_id`` for consistency
+        with the other resources; ``domain_id`` takes precedence when both are
+        given.
+        """
+        resolved_domain_id = domain_id if domain_id is not None else domain
+        if resolved_domain_id is None:
+            raise TypeError(
+                "create() missing required keyword-only argument: "
+                "'domain_id' (or its alias 'domain')"
+            )
+        body: dict[str, Any] = {"name": name, "domain_id": resolved_domain_id}
         if description is not None:
             body["description"] = description
         if config is not None:
@@ -175,13 +187,25 @@ class AsyncSimulations:
         self,
         *,
         name: str,
-        domain_id: str,
+        domain_id: str | None = None,
+        domain: str | None = None,
         description: str | None = None,
         config: dict[str, Any] | None = None,
         participant_persona_ids: list[str] | None = None,
     ) -> SimulationDetailResponse:
-        """POST /v1/simulations"""
-        body: dict[str, Any] = {"name": name, "domain_id": domain_id}
+        """POST /v1/simulations
+
+        ``domain`` is accepted as an alias for ``domain_id`` for consistency
+        with the other resources; ``domain_id`` takes precedence when both are
+        given.
+        """
+        resolved_domain_id = domain_id if domain_id is not None else domain
+        if resolved_domain_id is None:
+            raise TypeError(
+                "create() missing required keyword-only argument: "
+                "'domain_id' (or its alias 'domain')"
+            )
+        body: dict[str, Any] = {"name": name, "domain_id": resolved_domain_id}
         if description is not None:
             body["description"] = description
         if config is not None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 from ensoul.client import AsyncEnsoul, Ensoul
 from ensoul.config import ClientConfig
 from ensoul.errors import (
@@ -26,7 +28,10 @@ from ensoul.generated.personas import (
     PersonalityVectorResponse,
 )
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("ensoul")
+except PackageNotFoundError:  # pragma: no cover - source/editable checkout fallback
+    __version__ = "0.2.1"
 
 __all__ = [
     "Ensoul",

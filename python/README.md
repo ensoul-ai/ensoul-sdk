@@ -4,6 +4,8 @@ Python client library for the Ensoul personality simulation API.
 
 ## Installation
 
+**Requires Python 3.11 or newer.** On Python 3.9 or 3.10, `pip install ensoul` fails with no compatible version. Check your version with `python --version` and upgrade if needed.
+
 ```
 pip install ensoul
 ```
@@ -49,7 +51,19 @@ asyncio.run(main())
 
 ## Streaming
 
-Chat supports server-sent events (SSE) for streaming responses:
+Chat supports server-sent events (SSE) for streaming responses. Each event's
+`data` is a JSON object. The delta text lives in the **`chunk`** field:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `chunk` | `str` | The text delta. Append these to build the full reply. |
+| `conversation_id` | `str` | Stable across the stream. Pass it back to continue the conversation. |
+| `chunk_index` | `int` | 0-based position of this chunk in the stream. |
+| `is_final` | `bool` | `True` on the last event. Its `chunk` is empty (`""`). |
+| `token_usage` | `dict \| None` | Present only on the final event. |
+
+Use `parse_chat_event` to turn each raw `SSEEvent` into a typed `ChatStreamEvent`,
+then print `chunk` as it arrives:
 
 ```python
 from ensoul import Ensoul
@@ -58,15 +72,36 @@ from ensoul.streaming import parse_chat_event
 client = Ensoul(api_key="your-api-key")
 
 stream = client.chat.stream("persona-id", "What do you think about music?")
-for event in stream.events():
-    parsed = parse_chat_event(event)
-    if not parsed.is_final:
-        print(parsed.chunk, end="", flush=True)
-    else:
-        print()  # newline after stream completes
+try:
+    for event in stream.events():
+        parsed = parse_chat_event(event)
+        print(parsed.chunk, end="", flush=True)  # print text as it streams
+        if parsed.is_final:
+            print()  # newline after the stream completes
+            if parsed.token_usage:
+                print(f"tokens: {parsed.token_usage}")
+finally:
+    stream.close()
 ```
 
-The async client returns an `AsyncSSEStream` that works the same way with `async for`.
+The async client returns an `AsyncSSEStream` that works the same way with `async for`:
+
+```python
+import asyncio
+from ensoul import AsyncEnsoul
+from ensoul.streaming import parse_chat_event
+
+async def main() -> None:
+    client = AsyncEnsoul(api_key="your-api-key")
+    stream = await client.chat.stream("persona-id", "What do you think about music?")
+    async for event in stream:
+        parsed = parse_chat_event(event)
+        print(parsed.chunk, end="", flush=True)
+        if parsed.is_final:
+            print()
+
+asyncio.run(main())
+```
 
 ## Pagination
 
