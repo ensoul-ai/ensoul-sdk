@@ -34,7 +34,7 @@ _NONIDEMPOTENT_RETRY_STATUS_CODES = {429, 503}
 try:
     _SDK_VERSION = version("ensoul")
 except PackageNotFoundError:  # pragma: no cover - source/editable checkout fallback
-    _SDK_VERSION = "0.2.2"
+    _SDK_VERSION = "0.2.3"
 _SDK_USER_AGENT = f"ensoul-python/{_SDK_VERSION}"
 
 
