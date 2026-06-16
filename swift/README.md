@@ -1,6 +1,6 @@
 # Ensoul Swift SDK
 
-Official Swift SDK for the Ensoul personality simulation API. Zero external dependencies — built on URLSession.
+Official Swift SDK for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and personas with memory and personality that evolve through real conversation. Scale to thousands of personas, and run simulations where they grow and change over time. Zero external dependencies, built on URLSession.
 
 ## Installation
 

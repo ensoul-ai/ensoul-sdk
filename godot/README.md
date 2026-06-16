@@ -1,6 +1,6 @@
 # Ensoul SDK for Godot (GDScript)
 
-Official Godot 4 GDScript client for the [Ensoul](https://ensoul-ai.com) personality simulation API. Full parity with all other Ensoul SDKs — 11 resource namespaces, auto-pagination, SSE streaming, retry with exponential backoff, dual auth (API key + Bearer token).
+Official Godot 4 GDScript SDK for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and characters with memory and personality that evolve through real conversation. Scale from a single companion to thousands of NPCs, and run simulations where they grow and change over time. Full parity with all other Ensoul SDKs, including 11 resource namespaces, auto-pagination, SSE streaming, retry with exponential backoff, and dual auth (API key and Bearer token).
 
 **Requirements:** Godot 4.0+
 

@@ -1,6 +1,6 @@
 # Ensoul Unity SDK
 
-Official Unity SDK for the Ensoul API — domain-agnostic personality simulation at scale.
+Official Unity SDK for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and characters with memory and personality that evolve through real conversation. Scale from a single companion to thousands of NPCs, and run simulations where they grow and change over time.
 
 ## Installation
 

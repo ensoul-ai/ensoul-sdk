@@ -1,6 +1,6 @@
 # Ensoul C++ SDK
 
-Official C++ client library for the Ensoul personality simulation API.
+Official C++ SDK for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and personas with memory and personality that evolve through real conversation. Scale to thousands of personas, and run simulations where they grow and change over time.
 
 ## Build
 

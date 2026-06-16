@@ -1,6 +1,6 @@
 # Ensoul Python SDK
 
-Python client library for the Ensoul personality simulation API.
+Official Python SDK for the [Ensoul](https://ensoul-ai.com) API. Build AI personas and NPCs with memory and personality that evolve through real conversation. Scale to thousands of personas, and run simulations where they grow and change over time.
 
 ## Installation
 

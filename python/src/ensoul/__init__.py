@@ -31,7 +31,7 @@ from ensoul.generated.personas import (
 try:
     __version__ = version("ensoul")
 except PackageNotFoundError:  # pragma: no cover - source/editable checkout fallback
-    __version__ = "0.2.3"
+    __version__ = "0.2.4"
 
 __all__ = [
     "Ensoul",
