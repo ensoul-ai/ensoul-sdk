@@ -6,7 +6,9 @@
 namespace ensoul {
 
 inline constexpr const char* DEFAULT_BASE_URL = "https://api.ensoul-ai.com";
-inline constexpr long DEFAULT_TIMEOUT_MS = 30000;
+// Inference endpoints (domain generation, chat) run real-time LLM calls that
+// routinely take 30-120s+; 30s timed out the documented domains.generate "easy path".
+inline constexpr long DEFAULT_TIMEOUT_MS = 300000;
 inline constexpr int DEFAULT_MAX_RETRIES = 2;
 inline constexpr const char* API_VERSION = "v1";
 

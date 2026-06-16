@@ -6,7 +6,9 @@ namespace Ensoul
     public class EnsoulConfig
     {
         public const string DefaultBaseUrl = "https://api.ensoul-ai.com";
-        public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+        // Inference endpoints (domain generation, chat) run real-time LLM calls that
+        // routinely take 30-120s+; 30s timed out the documented domains.generate "easy path".
+        public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(300);
         public const int DefaultMaxRetries = 2;
         public const string ApiVersion = "v1";
 

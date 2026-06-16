@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import random
 import time
+from importlib.metadata import PackageNotFoundError, version
 
 import httpx
 
 from ensoul._types import HeadersLike, QueryParams
 from ensoul.auth import APIKeyAuth, AuthProvider, BearerAuth
-from ensoul.config import API_VERSION, ClientConfig
+from ensoul.config import API_VERSION, DEFAULT_CONNECT_TIMEOUT, ClientConfig
 from ensoul.errors import RateLimitError, raise_for_status
 from ensoul.rate_limit import RateLimitTracker
 from ensoul.streaming import AsyncSSEStream, SyncSSEStream
@@ -20,7 +21,47 @@ __all__ = [
 ]
 
 _RETRY_STATUS_CODES = {429, 500, 502, 503}
-_SDK_USER_AGENT = "ensoul-python/0.1.0"
+# HTTP methods that are safe to replay: re-sending them cannot create duplicate
+# side effects. POST/PATCH are NOT here — replaying a POST that already reached the
+# server (e.g. a domain generation that ran for 120s and then read-timed-out the
+# client) re-runs the inference and double-bills the caller. See _should_retry_*.
+_IDEMPOTENT_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "PUT", "DELETE"})
+# Status codes safe to retry even for a non-idempotent method, because they mean the
+# server did NOT process the request: 429 (rate limited, never ran) and 503 (service
+# unavailable). 500/502 are ambiguous for POST so we only retry them when idempotent.
+_NONIDEMPOTENT_RETRY_STATUS_CODES = {429, 503}
+
+try:
+    _SDK_VERSION = version("ensoul")
+except PackageNotFoundError:  # pragma: no cover - source/editable checkout fallback
+    _SDK_VERSION = "0.2.2"
+_SDK_USER_AGENT = f"ensoul-python/{_SDK_VERSION}"
+
+
+def _should_retry_status(method: str, status_code: int) -> bool:
+    """Whether a response with this status should be retried for this method."""
+    if status_code not in _RETRY_STATUS_CODES:
+        return False
+    if method.upper() in _IDEMPOTENT_METHODS:
+        return True
+    return status_code in _NONIDEMPOTENT_RETRY_STATUS_CODES
+
+
+def _should_retry_network(method: str) -> bool:
+    """Whether a network error (timeout / transport) should be retried for this method.
+
+    Only idempotent methods are replayed: a read-timeout on a POST may mean the
+    request already succeeded server-side, so retrying would duplicate the effect.
+    """
+    return method.upper() in _IDEMPOTENT_METHODS
+
+
+def _build_timeout(config: ClientConfig) -> httpx.Timeout:
+    """Long read/write/pool timeout for slow inference, short connect for fast failure."""
+    return httpx.Timeout(
+        config.timeout,
+        connect=min(config.timeout, DEFAULT_CONNECT_TIMEOUT),
+    )
 
 
 def _build_auth(config: ClientConfig) -> AuthProvider:
@@ -68,7 +109,7 @@ class SyncHTTPClient:
         }
         self._client = httpx.Client(
             base_url=config.base_url,
-            timeout=config.timeout,
+            timeout=_build_timeout(config),
             headers=default_headers,
             follow_redirects=True,
         )
@@ -120,7 +161,10 @@ class SyncHTTPClient:
 
                 self._rate_limiter.update(response)
 
-                if response.status_code in _RETRY_STATUS_CODES and attempt < self._config.max_retries:
+                if (
+                    _should_retry_status(method, response.status_code)
+                    and attempt < self._config.max_retries
+                ):
                     retry_after: float | None = None
                     if response.status_code == 429:
                         raw = response.headers.get("Retry-After")
@@ -140,13 +184,13 @@ class SyncHTTPClient:
                 raise
             except httpx.TimeoutException as exc:
                 last_exc = exc
-                if attempt < self._config.max_retries:
+                if _should_retry_network(method) and attempt < self._config.max_retries:
                     time.sleep(_retry_wait(attempt, None))
                     continue
                 raise
             except httpx.TransportError as exc:
                 last_exc = exc
-                if attempt < self._config.max_retries:
+                if _should_retry_network(method) and attempt < self._config.max_retries:
                     time.sleep(_retry_wait(attempt, None))
                     continue
                 raise
@@ -216,7 +260,7 @@ class AsyncHTTPClient:
         }
         self._client = httpx.AsyncClient(
             base_url=config.base_url,
-            timeout=config.timeout,
+            timeout=_build_timeout(config),
             headers=default_headers,
             follow_redirects=True,
         )
@@ -269,7 +313,10 @@ class AsyncHTTPClient:
 
                 self._rate_limiter.update(response)
 
-                if response.status_code in _RETRY_STATUS_CODES and attempt < self._config.max_retries:
+                if (
+                    _should_retry_status(method, response.status_code)
+                    and attempt < self._config.max_retries
+                ):
                     retry_after: float | None = None
                     if response.status_code == 429:
                         raw = response.headers.get("Retry-After")
@@ -289,13 +336,13 @@ class AsyncHTTPClient:
                 raise
             except httpx.TimeoutException as exc:
                 last_exc = exc
-                if attempt < self._config.max_retries:
+                if _should_retry_network(method) and attempt < self._config.max_retries:
                     await asyncio.sleep(_retry_wait(attempt, None))
                     continue
                 raise
             except httpx.TransportError as exc:
                 last_exc = exc
-                if attempt < self._config.max_retries:
+                if _should_retry_network(method) and attempt < self._config.max_retries:
                     await asyncio.sleep(_retry_wait(attempt, None))
                     continue
                 raise

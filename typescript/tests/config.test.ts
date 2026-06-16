@@ -23,7 +23,7 @@ describe("buildConfig()", () => {
     it("uses the default timeout", () => {
       const config = buildConfig({});
       expect(config.timeout).toBe(DEFAULT_TIMEOUT);
-      expect(config.timeout).toBe(30_000);
+      expect(config.timeout).toBe(300_000);
     });
 
     it("uses the default max retries", () => {

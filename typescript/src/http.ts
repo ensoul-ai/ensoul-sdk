@@ -4,6 +4,25 @@ import { RateLimitError, raiseForStatus } from "./errors.js";
 import { RateLimitTracker } from "./rate-limit.js";
 
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503]);
+// Methods safe to replay without creating duplicate side effects. POST/PATCH are
+// excluded: replaying a POST that already reached the server (e.g. a 120s domain
+// generation that read-timed-out the client) re-runs the inference and double-bills
+// the caller.
+const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "OPTIONS", "PUT", "DELETE"]);
+// Status codes safe to retry even for non-idempotent methods, because the server did
+// not process the request: 429 (rate limited) and 503 (unavailable). 500/502 are
+// ambiguous for POST, so they are only retried for idempotent methods.
+const NONIDEMPOTENT_RETRY_STATUS_CODES = new Set([429, 503]);
+
+function shouldRetryStatus(method: string, status: number): boolean {
+  if (!RETRYABLE_STATUS_CODES.has(status)) return false;
+  if (IDEMPOTENT_METHODS.has(method.toUpperCase())) return true;
+  return NONIDEMPOTENT_RETRY_STATUS_CODES.has(status);
+}
+
+function shouldRetryNetwork(method: string): boolean {
+  return IDEMPOTENT_METHODS.has(method.toUpperCase());
+}
 
 export class HTTPClient {
   private readonly config: ClientConfig;
@@ -112,7 +131,7 @@ export class HTTPClient {
 
         this.rateLimitTracker.update(response.headers);
 
-        if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < this.config.maxRetries) {
+        if (shouldRetryStatus(method, response.status) && attempt < this.config.maxRetries) {
           let retryAfter: number | undefined;
           const retryAfterHeader = response.headers.get("Retry-After");
           if (retryAfterHeader) {
@@ -148,7 +167,7 @@ export class HTTPClient {
 
         if (err instanceof Error && err.name === "AbortError") {
           lastError = new Error(`Request timed out after ${this.config.timeout}ms`);
-          if (attempt < this.config.maxRetries) {
+          if (shouldRetryNetwork(method) && attempt < this.config.maxRetries) {
             await this._retryWait(attempt);
             continue;
           }
@@ -156,7 +175,7 @@ export class HTTPClient {
         }
 
         // Network errors
-        if (err instanceof TypeError && attempt < this.config.maxRetries) {
+        if (err instanceof TypeError && shouldRetryNetwork(method) && attempt < this.config.maxRetries) {
           lastError = err;
           await this._retryWait(attempt);
           continue;

@@ -2,7 +2,7 @@ class_name EnsoulConfig
 extends Resource
 
 const DEFAULT_BASE_URL     := "https://api.ensoul-ai.com"
-const DEFAULT_TIMEOUT_SEC  := 30.0
+const DEFAULT_TIMEOUT_SEC  := 300.0  # inference (domain gen, chat) routinely takes 30-120s+
 const DEFAULT_MAX_RETRIES  := 3
 const DEFAULT_RETRY_BASE   := 1.0
 const API_VERSION          := "v1"

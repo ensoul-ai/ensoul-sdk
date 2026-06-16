@@ -47,7 +47,7 @@ public class EnsoulClient {
         apiKey: String? = nil,
         baseURL: String? = nil,
         bearerToken: String? = nil,
-        timeout: TimeInterval = 30,
+        timeout: TimeInterval = defaultTimeout,
         maxRetries: Int = 2,
         customHeaders: [String: String] = [:],
         session: URLSession = .shared

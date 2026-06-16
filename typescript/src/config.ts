@@ -3,10 +3,14 @@
  */
 
 export const DEFAULT_BASE_URL = "https://api.ensoul-ai.com";
-export const DEFAULT_TIMEOUT = 30_000; // milliseconds
+// Inference endpoints (domain generation, chat, aggregate streaming) run real-time
+// LLM calls that routinely take 30-120s+ — domain generation alone measures ~123s.
+// A 30s default made the documented "easy path" (domains.generate) time out on a
+// new developer's first call.
+export const DEFAULT_TIMEOUT = 300_000; // milliseconds
 export const DEFAULT_MAX_RETRIES = 2;
 export const API_VERSION = "v1";
-export const SDK_VERSION = "0.1.0";
+export const SDK_VERSION = "0.2.2";
 
 export interface ClientConfig {
   baseUrl: string;

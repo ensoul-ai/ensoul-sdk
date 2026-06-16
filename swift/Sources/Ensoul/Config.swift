@@ -4,7 +4,9 @@ import Foundation
 // MARK: - Constants
 
 public let defaultBaseURL = "https://api.ensoul-ai.com"
-public let defaultTimeout: TimeInterval = 30
+// Inference endpoints (domain generation, chat) run real-time LLM calls that
+// routinely take 30-120s+; 30s timed out the documented domains.generate "easy path".
+public let defaultTimeout: TimeInterval = 300
 public let defaultMaxRetries: Int = 2
 public let apiVersion = "v1"
 
