@@ -64,6 +64,9 @@ jobs:
     needs: validate
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # PyPI Trusted Publishing (OIDC) — no token
+      contents: write   # upload the wheel to the GitHub Release
     steps:
       - uses: actions/checkout@v4
 
@@ -74,9 +77,19 @@ jobs:
       - name: Install build tools
         run: pip install build
 
-      - name: Build wheel
+      - name: Build sdist + wheel
         working-directory: python
-        run: python -m build --wheel
+        run: python -m build
+
+      # No token: auth is the GitHub OIDC token exchanged via the PyPI
+      # Trusted Publisher config (project ensoul / org ensoul-ai / repo
+      # ensoul-sdk / this file). skip-existing tolerates a re-run on a
+      # version already on PyPI.
+      - name: Publish to PyPI (Trusted Publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist/
+          skip-existing: true
 
       - name: Upload wheel to GitHub Release
         uses: softprops/action-gh-release@v2
