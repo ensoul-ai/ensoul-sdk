@@ -1,6 +1,6 @@
 # Ensoul SDK
 
-Official SDKs for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and living characters with memory and personality that evolve through real conversation. One API across seven languages, with first-class plugins for Godot and Unity.
+Official SDKs for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and living characters with memory and personality that evolve through real conversation. Scale from a single companion NPC to entire populations, and run simulations where personas grow, form memories, and change over time even while players are away. One API across seven languages, with first-class plugins for Godot and Unity.
 
 **Upgrading from 0.1.x?** 0.2.0 is a breaking release that realigns every SDK
 with the live API. See [MIGRATION.md](MIGRATION.md).
