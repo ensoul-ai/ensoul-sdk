@@ -1,6 +1,6 @@
 # Ensoul SDK
 
-Official SDK suite for the [Ensoul](https://ensoul-ai.com) API, a domain-agnostic personality simulation framework for creating authentic, evolving synthetic populations at scale.
+Official SDKs for the [Ensoul](https://ensoul-ai.com) API. Build AI NPCs and living characters with memory and personality that evolve through real conversation. One API across seven languages, with first-class plugins for Godot and Unity.
 
 **Upgrading from 0.1.x?** 0.2.0 is a breaking release that realigns every SDK
 with the live API. See [MIGRATION.md](MIGRATION.md).
