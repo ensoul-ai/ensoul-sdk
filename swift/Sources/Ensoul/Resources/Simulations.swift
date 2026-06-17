@@ -108,6 +108,15 @@ public class Simulations {
         return try Self.jsonObject(from: data)
     }
 
+    // MARK: - Delete
+
+    /// DELETE /v1/simulations/{simulationId}
+    ///
+    /// Deletes a simulation (and stops it if running). Returns 204 No Content.
+    public func delete(_ simulationId: String) async throws {
+        _ = try await client.delete("/v1/simulations/\(simulationId)")
+    }
+
 
     // MARK: - Stream
 

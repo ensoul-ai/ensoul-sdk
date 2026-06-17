@@ -89,7 +89,8 @@ public:
     // GET /v1/aggregate/influence/{persona_id}
     nlohmann::json trace_influence(const std::string& persona_id,
                                     const std::string& influence_type = "",
-                                    const std::string& direction = "downstream",
+                                    // API accepts: downward | upward | both
+                                    const std::string& direction = "downward",
                                     int max_depth = 3) {
         std::map<std::string, std::string> params = {
             {"direction", direction},

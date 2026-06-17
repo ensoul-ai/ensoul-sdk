@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ensoul"
-version = "0.2.4"
+version = "0.2.5"
 description = "Official Python SDK for the Ensoul API. Build AI NPCs and personas with memory and personality that evolve through real conversation, scale to thousands, and run simulations where they change over time."
 readme = "README.md"
 license = "Apache-2.0"

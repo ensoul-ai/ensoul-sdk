@@ -73,6 +73,11 @@ export class Simulations {
     return this.client.post(`/v1/simulations/${simulationId}/pause`, {});
   }
 
+  /** DELETE /v1/simulations/{simulationId} — delete a simulation (and stop it if running). Returns 204. */
+  async delete(simulationId: string): Promise<void> {
+    await this.client.delete(`/v1/simulations/${simulationId}`);
+  }
+
   async stream(simulationId: string): Promise<SSEStream> {
     const response = await this.client.streamSSE(`/v1/simulations/${simulationId}/stream`);
     return new SSEStream(response);

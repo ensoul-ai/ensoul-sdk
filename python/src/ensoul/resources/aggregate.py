@@ -111,7 +111,7 @@ class Aggregate:
         persona_id: str,
         *,
         influence_type: str | None = None,
-        direction: str = "downstream",
+        direction: str = "downward",  # API accepts: downward | upward | both
         max_depth: int = 3,
     ) -> dict:
         """GET /v1/aggregate/influence/{persona_id}"""
@@ -219,7 +219,7 @@ class AsyncAggregate:
         persona_id: str,
         *,
         influence_type: str | None = None,
-        direction: str = "downstream",
+        direction: str = "downward",  # API accepts: downward | upward | both
         max_depth: int = 3,
     ) -> dict:
         """GET /v1/aggregate/influence/{persona_id}"""

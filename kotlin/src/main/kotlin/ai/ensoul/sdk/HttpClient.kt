@@ -219,6 +219,16 @@ class EnsoulHttpClient(
         params: Map<String, Any?>? = null,
     ): SseStream {
         val response = request(method, path, json = json, params = params, stream = true)
+        // request() skips the error check for streams (the success body is the
+        // live stream and must not be consumed here). For a 4xx/5xx the body is
+        // an error payload, not SSE, so surface it instead of handing back a
+        // stream that would parse the error as events.
+        val statusCode = response.status.value
+        if (statusCode >= 400) {
+            val bodyText = response.bodyAsText()
+            val headersMap = response.headers.entries().associate { it.key to it.value }
+            raiseForStatus(statusCode, bodyText, headersMap)
+        }
         return SseStream(response)
     }
 

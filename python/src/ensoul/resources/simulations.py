@@ -102,6 +102,10 @@ class Simulations:
         )
         return response.json()
 
+    def delete(self, simulation_id: str) -> None:
+        """DELETE /v1/simulations/{simulation_id} — delete a simulation (and stop it if running). Returns 204."""
+        self._client.delete(f"/v1/simulations/{simulation_id}")
+
     def stream(self, simulation_id: str) -> SyncSSEStream:
         """GET /v1/simulations/{simulation_id}/stream"""
         return self._client.stream_sse(
@@ -261,6 +265,10 @@ class AsyncSimulations:
             f"/v1/simulations/{simulation_id}/pause", json={}
         )
         return response.json()
+
+    async def delete(self, simulation_id: str) -> None:
+        """DELETE /v1/simulations/{simulation_id} — delete a simulation (and stop it if running). Returns 204."""
+        await self._client.delete(f"/v1/simulations/{simulation_id}")
 
     async def stream(self, simulation_id: str) -> AsyncSSEStream:
         """GET /v1/simulations/{simulation_id}/stream"""

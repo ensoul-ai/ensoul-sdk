@@ -74,6 +74,11 @@ class Simulations(private val client: EnsoulHttpClient) {
         return json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 
+    /** DELETE /v1/simulations/{simulationId} — delete a simulation (and stop it if running). Returns 204. */
+    suspend fun delete(simulationId: String) {
+        client.delete("/v1/simulations/$simulationId")
+    }
+
     suspend fun stream(simulationId: String): SseStream {
         return client.streamSse(HttpMethod.Get, "/v1/simulations/$simulationId/stream")
     }

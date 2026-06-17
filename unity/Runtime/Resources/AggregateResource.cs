@@ -107,7 +107,7 @@ namespace Ensoul.Resources
         public async Task<JObject> TraceInfluenceAsync(
             string personaId,
             string influenceType = null,
-            string direction = "downstream",
+            string direction = "downward", // API accepts: downward | upward | both
             int maxDepth = 3)
         {
             var queryParams = new Dictionary<string, object?>

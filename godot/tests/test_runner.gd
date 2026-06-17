@@ -105,7 +105,7 @@ func _fail(test_name: String, reason: String = "") -> void:
 
 func _test_config_defaults() -> void:
 	var c := EnsoulConfig.new()
-	_assert_eq(c.timeout, 30.0, "config_defaults: timeout")
+	_assert_eq(c.timeout, 300.0, "config_defaults: timeout")
 	_assert_eq(c.max_retries, 3, "config_defaults: max_retries")
 	_assert_eq(c.retry_base_sec, 1.0, "config_defaults: retry_base_sec")
 

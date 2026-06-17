@@ -64,6 +64,11 @@ public:
         return nlohmann::json::parse(resp.body);
     }
 
+    // DELETE /v1/simulations/{simulation_id} — delete a simulation (and stop it if running). Returns 204.
+    void delete_(const std::string& simulation_id) {
+        transport_.request("DELETE", "/v1/simulations/" + simulation_id);
+    }
+
     SseStream stream(const std::string& simulation_id) {
         auto raw = transport_.stream_sse_raw("GET",
             "/v1/simulations/" + simulation_id + "/stream");

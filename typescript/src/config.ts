@@ -10,7 +10,7 @@ export const DEFAULT_BASE_URL = "https://api.ensoul-ai.com";
 export const DEFAULT_TIMEOUT = 300_000; // milliseconds
 export const DEFAULT_MAX_RETRIES = 2;
 export const API_VERSION = "v1";
-export const SDK_VERSION = "0.2.4";
+export const SDK_VERSION = "0.2.5";
 
 export interface ClientConfig {
   baseUrl: string;

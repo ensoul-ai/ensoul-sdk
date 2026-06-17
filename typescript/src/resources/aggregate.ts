@@ -86,7 +86,8 @@ export class Aggregate {
     } = {},
   ): Promise<Record<string, unknown>> {
     const params: Record<string, unknown> = {
-      direction: options.direction ?? "downstream",
+      // API accepts: downward | upward | both
+      direction: options.direction ?? "downward",
       max_depth: options.maxDepth ?? 3,
     };
     if (options.influenceType != null) params.influence_type = options.influenceType;

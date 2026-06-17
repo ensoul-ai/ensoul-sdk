@@ -153,7 +153,7 @@ public class Aggregate {
     public func traceInfluence(
         _ personaId: String,
         influenceType: String? = nil,
-        direction: String = "downstream",
+        direction: String = "downward",  // API accepts: downward | upward | both
         maxDepth: Int = 3
     ) async throws -> [String: Any] {
         var params: [String: String] = [

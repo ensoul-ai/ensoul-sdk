@@ -334,6 +334,18 @@ namespace Ensoul
         {
             var response = await RequestAsync(method, path, json: json, queryParams: queryParams,
                 stream: true, cancellationToken: cancellationToken);
+            // RequestAsync skips the error check for streams (a 2xx body is the
+            // live stream and must not be consumed here). A 4xx/5xx body is an
+            // error payload, not SSE, so surface it rather than returning a
+            // stream that would parse the error as events.
+            var statusCode = (int)response.StatusCode;
+            if (statusCode >= 400)
+            {
+                var bodyText = await response.Content.ReadAsStringAsync();
+                var responseHeaders = response.Headers
+                    .ToDictionary(h => h.Key, h => (IEnumerable<string>)h.Value);
+                ErrorHandler.ThrowForStatus(statusCode, bodyText, responseHeaders);
+            }
             return new SseStream(response);
         }
 

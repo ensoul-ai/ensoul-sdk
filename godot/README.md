@@ -6,6 +6,10 @@ Official Godot 4 GDScript SDK for the [Ensoul](https://ensoul-ai.com) API. Build
 
 ## Installation
 
+**From the Godot Asset Library (recommended):** search for **Ensoul** in the editor's AssetLib tab, download, and enable the plugin under **Project → Project Settings → Plugins**.
+
+**Manual:**
+
 1. Copy the `addons/ensoul/` folder into your project's `addons/` directory
 2. Open **Project → Project Settings → Plugins**
 3. Enable the **Ensoul** plugin
@@ -133,4 +137,4 @@ If no explicit values are passed, the SDK reads from environment variables:
 
 ## License
 
-MIT
+Apache-2.0. See [LICENSE](LICENSE).

@@ -99,7 +99,7 @@ class Aggregate(private val client: EnsoulHttpClient) {
     suspend fun traceInfluence(
         personaId: String,
         influenceType: String? = null,
-        direction: String = "downstream",
+        direction: String = "downward", // API accepts: downward | upward | both
         maxDepth: Int = 3,
     ): JsonObject {
         val params = mutableMapOf<String, Any?>("direction" to direction, "max_depth" to maxDepth)

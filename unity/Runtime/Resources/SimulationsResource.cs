@@ -66,6 +66,10 @@ namespace Ensoul.Resources
             return JObject.Parse(text);
         }
 
+        /// <summary>DELETE /v1/simulations/{simulationId} — delete a simulation (and stop it if running). Returns 204.</summary>
+        public async Task DeleteAsync(string simulationId)
+            => await _client.DeleteAsync($"/v1/simulations/{simulationId}");
+
         public async Task<SseStream> StreamAsync(string simulationId)
             => await _client.StreamSseAsync(HttpMethod.Get, $"/v1/simulations/{simulationId}/stream");
 
